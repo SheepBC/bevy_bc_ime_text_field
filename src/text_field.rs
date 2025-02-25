@@ -9,7 +9,7 @@ use bevy::{
     ui::widget::Text
 };
 
-use crate::cursur::{changed_select, clicked_change_select, TextCursor};
+use crate::cursur::TextCursor;
 
 #[derive(Resource)]
 pub(crate) struct LastEmoji(pub Option<String>);
@@ -24,12 +24,6 @@ pub(crate) struct LastEmoji(pub Option<String>);
 
 #[derive(Debug,Clone, Copy)]
 pub struct Select(pub usize,pub usize);
-
-impl Select{
-    pub(crate) fn is_close(&self) -> bool{
-        self.0 == self.1
-    }
-}
 
 #[derive(Component)]
 struct SelectChild;
@@ -104,9 +98,6 @@ pub(crate) fn add_textfield_child(
             TextSpan::new(""),
             text_style.get_text_style()
         )).id();
-
-        commands.entity(parent).observe(clicked_change_select);
-        commands.entity(parent).observe(changed_select);
 
         commands.entity(parent).add_children(&[
             front,

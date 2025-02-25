@@ -4,7 +4,7 @@ use bevy::{
     ecs::{query::With,system::Query},
     window::{PrimaryWindow, Window}
 };
-use cursur::{update_picking_text_field, update_text_cursor};
+use cursur::update_text_cursor;
 use input::input_update;
 use text_field::{add_textfield_child, text_style_changed, LastEmoji};
 
@@ -24,7 +24,6 @@ impl Plugin for ImeTextFieldPlugin{
         .add_systems(Update, input_update)
         .add_systems(Update, update_text_cursor)
         .add_systems(Update, text_style_changed)
-        .add_systems(Update, update_picking_text_field)
         .add_systems(Update, add_textfield_child);
     }
 }

@@ -1,4 +1,3 @@
-use bevy::math::Vec2;
 
 use crate::text_field::Select;
 
@@ -20,20 +19,4 @@ impl TextSplit for String {
         let (first, rest) = self.split_at(char_index);
         (first.to_string(), rest.to_string())
     }
-}
-
-pub fn is_in_box(
-    box_pos: Vec2,
-    size: Vec2,
-    object_pos: Vec2
-) -> bool {
-
-    let helf_size = size/2.0;
-
-    if (box_pos.x - helf_size.x) < object_pos.x && (box_pos.x + helf_size.x) > object_pos.x{
-        if (box_pos.y - helf_size.y) < object_pos.y && (box_pos.y + helf_size.y) > object_pos.y{
-            return true;
-        }
-    }
-    false
 }

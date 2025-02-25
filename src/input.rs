@@ -89,7 +89,6 @@ pub(crate) fn input_update(
         let mut is_text_change = false;
         if !key_list.is_empty(){
             text_list = get_changed_text_list(&key_list, &mut text_field);
-            //println!("{:?}",key_list);
             is_text_change = true;
         }
 
