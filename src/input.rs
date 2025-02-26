@@ -1,3 +1,5 @@
+use std::cmp::min;
+
 use bevy::{
     ecs::{entity::Entity, event::EventReader, system::{Commands, Query, ResMut}},
     hierarchy::Children,
@@ -6,7 +8,7 @@ use bevy::{
     window::Ime
 };
 
-use crate::{cursur::TextCursor, event::TextEdited, text_field::{LastEmoji, Select, TextField, TextFieldPosition}, tool::splite_text};
+use crate::{cursur::TextCursor, event::TextEdited, text_field::{LastEmoji, Select, TextField, TextFieldPosition}, tool::{splite_text, ToolString}};
 
 
 pub(crate) fn get_keys(
@@ -61,6 +63,18 @@ pub(crate) fn get_keys(
                 }
                 Key::Enter => {
                     list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Text("\n".to_string())});
+                }
+                Key::ArrowLeft => {
+                    list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Left});
+                }
+                Key::ArrowRight => {
+                    list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Right});
+                }
+                Key::ArrowUp => {
+                    list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Up});
+                }
+                Key::ArrowDown => {
+                    list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Down});
                 }
                 _ => {}
             }
@@ -181,6 +195,71 @@ pub(crate) fn get_changed_text_list(
                     KeyType::BackSpace => {
                         text_list[0].pop();
                     }
+                    KeyType::Left => {
+                        if text_list[0].is_empty() {break;}
+                        let remove = text_list[0].pop();
+                        text_list[2] = remove.unwrap().to_string() + &text_list[2];
+                    }
+                    KeyType::Right => {
+                        if text_list[2].is_empty() {break;}
+                        let remove = text_list[2].front_pop();
+                        text_list[0] = text_list[0].clone() + &remove.unwrap().to_string();
+                    }
+                    KeyType::Up => {
+                        let text = text_list.concat();
+                        let list: Vec<&str> = text.split("\n").collect();
+                        let mut last_line_inform: (usize,usize) = (0,0);
+                        let mut all_size = 0;
+                        let select = text_field.select.0;
+
+                        for line in list{
+                            let size = line.to_string().size();
+                            all_size += size;
+                            if select <= all_size{
+                                if last_line_inform == (0,0){
+                                    break;
+                                }
+                                else {
+                                    let change_select_usize = min(last_line_inform.0 + (select - (all_size-size)), last_line_inform.1);
+                                    let split_front = text_list[0].split_chars_at(change_select_usize);
+                                    text_list[0] = split_front.0;
+                                    text_list[2] = split_front.1 + &text_list[2];
+                                    break;
+                                }
+                            }
+
+                            last_line_inform = (all_size-size,all_size);
+                            all_size += 1;
+                        }
+
+                    }
+                    KeyType::Down => {
+                        let text = text_list.concat();
+                        let list: Vec<&str> = text.split("\n").collect();
+                        let mut is_now: (bool,usize) = (false,0);
+                        let mut all_size = 0;
+                        let select = text_field.select.0;
+
+                        for line in list{
+                            let size = line.to_string().size();
+                            all_size += size;
+
+                            if is_now.0{
+                                let change_select_usize = min((all_size-size)+is_now.1, all_size);
+                                let split_back = text_list[2].split_chars_at(change_select_usize-text_list[0].size());
+                                text_list[0] = text_list[0].clone() + &split_back.0;
+                                text_list[2] = split_back.1;
+                                break; 
+                            }
+
+                            if select <= all_size{
+                                is_now = (true,select-(all_size-size));
+                            }
+
+                            all_size += 1;
+                        }
+
+                    }
                 }
 
             }
@@ -220,5 +299,9 @@ pub(crate) struct KeyInform{
 pub(crate) enum KeyType {
     BackSpace,
     Space,
+    Up,
+    Left,
+    Right,
+    Down,
     Text(String)
 }
