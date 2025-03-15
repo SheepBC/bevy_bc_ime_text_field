@@ -23,15 +23,15 @@ pub(crate) fn get_keys(
 
         match ime {
             Ime::Commit { value,.. } => {
-                if value == &"".to_string() {break;}
+                if value == &"".to_string() {continue;}
                 if value.chars().count() > 1 {
                     last_emoji.0 = None;
-                    break;
+                    continue;
                 }
                 list.push(KeyInform {is_ime: true,is_finish:true,key: KeyType::Text(value.clone())});
             }
             Ime::Preedit {  value, cursor,.. } => {
-                if value == &"".to_string() {break;}
+                if value == &"".to_string() {continue;}
                 if cursor != &Some((0,0)) {
                     let mut text = value.clone();
 
@@ -40,7 +40,7 @@ pub(crate) fn get_keys(
                     }
                     last_emoji.0 = Some(value.to_string());
                     list.push(KeyInform {is_ime: false,is_finish:true,key: KeyType::Text(text.clone())});
-                    break;
+                    continue;
                 }
                 
                 list.push(KeyInform {is_ime: true,is_finish:false,key: KeyType::Text(value.clone())});
