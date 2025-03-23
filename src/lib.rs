@@ -5,15 +5,16 @@ use bevy::{
     window::{PrimaryWindow, Window}
 };
 use cursur::update_text_cursor;
-use input::input_update;
+use input::input::update_input;
 use text_field::{add_textfield_child, text_style_changed, LastEmoji};
 
 pub mod cursur;
 pub mod text_field;
-mod input;
 pub(crate) mod tool;
 pub mod event;
 pub struct ImeTextFieldPlugin;
+mod input;
+
 
 impl Plugin for ImeTextFieldPlugin{
 
@@ -21,7 +22,7 @@ impl Plugin for ImeTextFieldPlugin{
         app
         .insert_resource(LastEmoji(None))
         .add_systems(Startup, setup)
-        .add_systems(Update, input_update)
+        .add_systems(Update, update_input)
         .add_systems(Update, update_text_cursor)
         .add_systems(Update, text_style_changed)
         .add_systems(Update, add_textfield_child);
