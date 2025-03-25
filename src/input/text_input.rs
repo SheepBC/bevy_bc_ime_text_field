@@ -1,7 +1,13 @@
 use bevy::input::keyboard::Key;
 
-use super::input::{InformType, KeyType};
+use super::input::InformType;
 
+#[derive(PartialEq, Eq,Debug)]
+pub(crate) enum KeyType {
+    BackSpace,
+    Space,
+    Text(String)
+}
 
 pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>){
     match key {
@@ -33,4 +39,5 @@ pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3]){
             text_list[0].pop();
         }
     }
+    text_list[1] = "".to_string();
 }

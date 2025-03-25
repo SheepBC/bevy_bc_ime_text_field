@@ -23,7 +23,27 @@ pub(crate) struct LastEmoji(pub Option<String>);
 }
 
 #[derive(Debug,Clone, Copy)]
-pub struct Select(pub usize,pub usize);
+pub struct Select(pub usize,pub usize,pub Option<usize>);
+
+impl Select {
+    pub(crate) fn is_close(&self) -> bool{
+        self.0 == self.1
+    }
+
+    pub(crate) fn is_open_left(&self) -> bool{
+        if let Some(last) = self.2{
+            return last != self.0;
+        }
+        false
+    }
+
+    pub(crate) fn is_open_right(&self) -> bool{
+        if let Some(last) = self.2{
+            return last != self.1;
+        }
+        false
+    }
+}
 
 #[derive(Component)]
 struct SelectChild;
@@ -35,12 +55,12 @@ impl TextField {
             TextField { 
                 is_focuse: is_foucs,
                 text: String::new(),
-                select: Select(0,0),
+                select: Select(0,0,None),
                 is_before_text_ime: false
             },
             TextCursor {
-                is_see: false,
-                timer: Timer::new(Duration::from_secs_f32(0.5), TimerMode::Repeating)
+                is_see: true,
+                timer: Timer::new(Duration::from_secs_f32(100000.0), TimerMode::Repeating)
             },
             Text::default()
         )
@@ -52,7 +72,7 @@ impl TextField {
             TextField { 
                 is_focuse: is_foucs,
                 text: String::new(),
-                select: Select(0,0),
+                select: Select(0,0,None),
                 is_before_text_ime: false 
             },
             TextCursor {

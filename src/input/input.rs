@@ -1,8 +1,8 @@
 
 use bevy::{
-    ecs::{entity::Entity, event::EventReader, system::{Commands, Query, ResMut}},
+    ecs::{entity::Entity, event::EventReader, system::{Commands, Query, Res, ResMut}},
     hierarchy::Children,
-    input::keyboard::KeyboardInput,
+    input::{keyboard::{KeyCode, KeyboardInput}, ButtonInput},
     text::TextSpan,
     window::Ime
 };
@@ -15,18 +15,19 @@ use crate::{
     LastEmoji
 };
 
-use super::{select_input::{get_select_informtype, set_select_text_list}, text_input::{get_text_informtype, set_text_list}};
+use super::{select_input::{get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType}, text_input::{get_text_informtype, set_text_list, KeyType}};
 
 pub(crate) fn update_input(
     mut commands: Commands,
     last_emoji: ResMut<LastEmoji>,
     evr_ime: EventReader<Ime>,
     evr_kbd: EventReader<KeyboardInput>,
+    res_kbd: Res<ButtonInput<KeyCode>>,
     mut q_textfield: Query<(Entity,&mut TextField,&TextCursor,&Children)>,
     mut q_child_text: Query<(&mut TextSpan,&mut TextFieldPosition)>,
 ) {
 
-    let key_list = get_keys(last_emoji,evr_ime, evr_kbd);
+    let key_list = get_keys(last_emoji,evr_ime, evr_kbd,res_kbd);
 
     for (entity,mut text_field,cursor,children) in q_textfield.iter_mut(){
         if !text_field.is_focuse {continue;}
@@ -101,6 +102,7 @@ pub(crate) fn get_keys(
     mut last_emoji: ResMut<LastEmoji>,
     mut evr_ime: EventReader<Ime>,
     mut evr_kbd: EventReader<KeyboardInput>,
+    res_kbd: Res<ButtonInput<KeyCode>>
 ) -> Vec<KeyInform>{
 
     let mut list: Vec<KeyInform> = Vec::new();
@@ -147,12 +149,18 @@ pub(crate) fn get_keys(
             _ => {}
         }
     }
-
-    for key in evr_kbd.read(){
+    let key_list = evr_kbd.read();
+    let is_pressed_shift = res_kbd.pressed(KeyCode::ShiftLeft) || res_kbd.pressed(KeyCode::ShiftRight);
+    for key in key_list{
         if key.state.is_pressed(){
             let mut add_key:Option<InformType> = None;
             get_text_informtype(key.logical_key.clone(), &mut add_key);
-            get_select_informtype(key.logical_key.clone(), &mut add_key);
+            if is_pressed_shift{
+                get_select_shift_informtype(key.logical_key.clone(), &mut add_key);
+            }
+            else {
+                get_select_informtype(key.logical_key.clone(), &mut add_key);   
+            }
             if let Some(key) = add_key{
                 list.push(KeyInform { 
                     is_ime: false,
@@ -182,6 +190,7 @@ pub(crate) fn get_changed_text_list(
                 if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key{
                     text_list[0].pop();
                     text_list[0] += &text;
+                    text_list[1] = "".to_string();
                 }
             }
             else {
@@ -211,13 +220,20 @@ pub(crate) fn get_changed_text_list(
                     text_list[0] += text;
                 }
                 text_field.is_before_text_ime= true;
+                text_list[1] = "".to_string();
             }
         }
     }
 
     text_field.text = text_list.concat();
     let num = text_list[0].chars().count();
-    text_field.select = Select(num,num);
+    let select_num = text_list[1].chars().count();
+    let last_select = if select_num == 0{
+        None
+    }else {
+        text_field.select.2
+    };
+    text_field.select = Select(num,num+select_num,last_select);
 
     text_list
     
@@ -226,21 +242,6 @@ pub(crate) struct KeyInform{
     pub(crate) is_ime: bool,
     pub(crate) is_finish: bool,
     key: InformType,
-}
-
-#[derive(PartialEq, Eq,Debug)]
-pub(crate) enum KeyType {
-    BackSpace,
-    Space,
-    Text(String)
-}
-
-#[derive(Debug,PartialEq,Eq)]
-pub(crate) enum SelectType {
-    Up,
-    Left,
-    Right,
-    Down,
 }
 
 pub(crate) enum InformType{
