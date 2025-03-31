@@ -15,7 +15,10 @@ use crate::{
     LastEmoji
 };
 
-use super::{select_input::{get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType}, text_input::{get_text_informtype, set_text_list, KeyType}};
+use super::{
+    select_input::{get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType},
+    text_input::{get_text_informtype, set_text_list, KeyType}
+};
 
 pub(crate) fn update_input(
     mut commands: Commands,
@@ -150,16 +153,17 @@ pub(crate) fn get_keys(
         }
     }
     let key_list = evr_kbd.read();
-    let is_pressed_shift = res_kbd.pressed(KeyCode::ShiftLeft) || res_kbd.pressed(KeyCode::ShiftRight);
+    let is_pressed_shift = res_kbd.any_pressed([KeyCode::ShiftLeft,KeyCode::ShiftRight]);
+    let is_pressed_ctrl = res_kbd.any_pressed([KeyCode::ControlLeft,KeyCode::ControlRight]);
     for key in key_list{
         if key.state.is_pressed(){
             let mut add_key:Option<InformType> = None;
             get_text_informtype(key.logical_key.clone(), &mut add_key);
             if is_pressed_shift{
-                get_select_shift_informtype(key.logical_key.clone(), &mut add_key);
+                get_select_shift_informtype(key.logical_key.clone(), &mut add_key,is_pressed_ctrl);
             }
             else {
-                get_select_informtype(key.logical_key.clone(), &mut add_key);   
+                get_select_informtype(key.logical_key.clone(), &mut add_key,is_pressed_ctrl);   
             }
             if let Some(key) = add_key{
                 list.push(KeyInform { 

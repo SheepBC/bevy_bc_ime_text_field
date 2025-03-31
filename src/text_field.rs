@@ -76,8 +76,8 @@ impl TextField {
                 is_before_text_ime: false 
             },
             TextCursor {
-                is_see: false,
-                timer: Timer::new(Duration::from_secs_f32(0.5), TimerMode::Repeating)
+                is_see: true,
+                timer: Timer::new(Duration::from_secs_f32(10000000.0), TimerMode::Repeating)
             },
             Text2d::default()
         )
@@ -129,7 +129,7 @@ pub(crate) fn add_textfield_child(
 }
 
 #[derive(Component,Debug,PartialEq)]
-pub(crate)  enum TextFieldPosition {
+pub(crate) enum TextFieldPosition {
     Front,
     Select(String),
     Back

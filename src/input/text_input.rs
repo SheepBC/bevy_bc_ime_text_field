@@ -23,6 +23,9 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>){
         Key::Enter => {
             *add_key = Some(InformType::KeyType(KeyType::Text("\n".to_string())));
         }
+        Key::Tab => {
+            *add_key = Some(InformType::KeyType(KeyType::Text("\t".to_string())));
+        }
         _ => {}
     }
 }
