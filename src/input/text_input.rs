@@ -24,20 +24,11 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bo
         }
         Key::Character(msg) => {
             let s_msg = msg.to_string();
-            if (s_msg == "V" || s_msg == "v") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Paste))
-            }
-            else if (s_msg == "c" || s_msg == "C") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Copy))
-            }
-            else if (s_msg == "x" || s_msg == "X") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Cut))
-            }
-            else if (s_msg == "a" || s_msg == "A") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::AllSelect))
+            if is_ctrl{
+                set_ctrl_key(add_key, s_msg);
             }
             else{
-                *add_key = Some(InformType::KeyType(KeyType::Text(msg.to_string())));
+                *add_key = Some(InformType::KeyType(KeyType::Text(s_msg)));
             }
         }
         Key::Enter => {
@@ -47,6 +38,22 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bo
             *add_key = Some(InformType::KeyType(KeyType::Text("\t".to_string())));
         }
         _ => {}
+    }
+}
+
+fn set_ctrl_key(add_key: &mut Option<InformType>,s_msg: String){
+    let msg = s_msg.to_uppercase();
+    if msg == "V"{
+        *add_key = Some(InformType::KeyType(KeyType::Paste))
+    }
+    else if msg == "C"{
+        *add_key = Some(InformType::KeyType(KeyType::Copy))
+    }
+    else if msg == "X"{
+        *add_key = Some(InformType::KeyType(KeyType::Cut))
+    }
+    else if msg == "A"{
+        *add_key = Some(InformType::KeyType(KeyType::AllSelect))
     }
 }
 
