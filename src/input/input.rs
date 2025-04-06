@@ -9,7 +9,7 @@ use bevy::{
 
 use crate::{
     cursur::TextCursor,
-    event::TextEdited,
+    event::{EnterEvent, TextEdited},
     text_field::{Select, TextField, TextFieldPosition},
     tool::splite_text,
     LastEmoji
@@ -37,6 +37,7 @@ pub(crate) fn update_input(
 
         let mut text_list = [const { String::new() }; 3];
         let mut is_text_change = false;
+        let is_enter = key_list.contains(&KeyInform { is_ime: false, is_finish: true, key: InformType::KeyType(KeyType::Text("\n".to_string())) });
         if !key_list.is_empty(){
             text_list = get_changed_text_list(&key_list, &mut text_field);
             is_text_change = true;
@@ -46,6 +47,13 @@ pub(crate) fn update_input(
 
         if is_text_change{
             commands.get_entity(entity).unwrap().trigger(TextEdited {
+                text_field: text_field.clone(),
+                entity: entity
+            });
+        }
+
+        if is_enter{
+            commands.get_entity(entity).unwrap().trigger(EnterEvent{
                 text_field: text_field.clone(),
                 entity: entity
             });
@@ -158,7 +166,7 @@ pub(crate) fn get_keys(
     for key in key_list{
         if key.state.is_pressed(){
             let mut add_key:Option<InformType> = None;
-            get_text_informtype(key.logical_key.clone(), &mut add_key);
+            get_text_informtype(key.logical_key.clone(), &mut add_key,is_pressed_ctrl);
             if is_pressed_shift{
                 get_select_shift_informtype(key.logical_key.clone(), &mut add_key,is_pressed_ctrl);
             }
@@ -242,12 +250,15 @@ pub(crate) fn get_changed_text_list(
     text_list
     
 }
+
+#[derive(PartialEq, Eq)]
 pub(crate) struct KeyInform{
     pub(crate) is_ime: bool,
     pub(crate) is_finish: bool,
     key: InformType,
 }
 
+#[derive(PartialEq, Eq)]
 pub(crate) enum InformType{
     KeyType(KeyType),
     SelectType(SelectType)

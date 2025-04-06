@@ -23,3 +23,9 @@ pub struct ChangedSelect{
     pub entity: Entity,
     pub text_fiedl: TextField
 }
+
+#[derive(Event)]
+pub struct EnterEvent{
+    pub text_field: TextField,
+    pub entity: Entity
+}

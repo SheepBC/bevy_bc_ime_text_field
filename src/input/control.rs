@@ -34,7 +34,7 @@ pub(super) fn get_front_ctrl(text: String) -> [String; 2]{
     }
 }
 
-pub(super) fn get_back_crtl(text: String) -> [String; 2]{
+pub(super) fn get_back_ctrl(text: String) -> [String; 2]{
     let list = get_ctrl_list(text.clone(),false);
     if list.2 == None {
         return [text,String::new()];
@@ -76,10 +76,8 @@ fn get_ctrl_list(text: String,is_front: bool) -> (String,String,Option<TextDataT
     for (i,t) in t_list.iter().enumerate(){
         let str_t = t.to_string();
         let mut now_char = TextData(None);
+
         match str_t.as_str() {
-            "."|"?"|"!" => {
-                now_char.0 = Some(TextDataType::End);
-            }
             "\t" => {
                 now_char.0 = Some(TextDataType::Tab);
             }
@@ -94,6 +92,15 @@ fn get_ctrl_list(text: String,is_front: bool) -> (String,String,Option<TextDataT
             }
             _ => {now_char.0 = Some(TextDataType::None);}
         }
+
+        let end_list: Vec<String> = "~!@#$%^&*()_+`{}|[]\\:\";',./<>?"
+            .chars()
+            .map(|c| c.to_string())
+            .collect();
+        if end_list.contains(&str_t){
+            now_char.0 = Some(TextDataType::End);
+        }
+
         if let Some(_) = last_char.0{
             if last_char != now_char{
                 let len = t_list.len();
@@ -109,7 +116,7 @@ fn get_ctrl_list(text: String,is_front: bool) -> (String,String,Option<TextDataT
         last_char = now_char;
     }
     let rst_list = text.to_string().split_chars_at(index);
-    (rst_list.0,rst_list.1,last_char.0)
+    (rst_list[0].clone(),rst_list[1].clone(),last_char.0)
 }
 
 #[derive(Debug,PartialEq, Eq,Clone, Copy)]
