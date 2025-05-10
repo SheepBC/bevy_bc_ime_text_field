@@ -1,6 +1,8 @@
 use bevy::input::keyboard::Key;
 use clipboard_win::{get_clipboard_string, set_clipboard_string};
 
+use crate::text_field::TextField;
+
 use super::input::InformType;
 
 #[derive(PartialEq, Eq,Debug)]
@@ -57,7 +59,7 @@ fn set_ctrl_key(add_key: &mut Option<InformType>,s_msg: String){
     }
 }
 
-pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3]){
+pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3],text_field: &TextField){
     let mut reset_select = true;
     match key {
         KeyType::Text(text) => {
@@ -67,7 +69,9 @@ pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3]){
             text_list[0] += &" ";
         }
         KeyType::BackSpace => {
-            text_list[0].pop();
+            if text_field.select.is_close(){
+                text_list[0].pop();
+            }
         }
         KeyType::Paste => {
             let paste_text = get_clipboard_string();

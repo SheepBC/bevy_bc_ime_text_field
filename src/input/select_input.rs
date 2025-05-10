@@ -81,9 +81,6 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
     let mut is_extend = false;
     match key {
         SelectType::Left(is_ctrl) => {
-            if text_list[0].is_empty() {
-                return true;
-            }
             if *is_ctrl{
                 let list = get_front_ctrl(text_list[0].clone());
                 set_left_area_ctrl(text_list,list);
@@ -91,15 +88,17 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
             else {
                 let mut add_text = String::new();
                 if is_close{
-                    add_text = text_list[0].pop().unwrap().to_string();
+                    add_text = if let Some(ch) = text_list[0].pop(){
+                        ch.to_string()
+                    }
+                    else{
+                        "".to_string()
+                    };
                 }
                 set_left_area(text_list, add_text);
             }
         },
         SelectType::Right(is_ctrl) => {
-            if text_list[2].is_empty() {
-                return true;
-            }
             if *is_ctrl{
                 let list = get_back_ctrl(text_list[2].clone());
                 set_right_area_ctrl(text_list,list);
@@ -107,7 +106,12 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
             else {
                 let mut add_text = String::new();
                 if is_close{
-                    add_text = text_list[2].front_pop().unwrap().to_string();
+                    add_text = if let Some(ch) = text_list[2].front_pop(){
+                        ch.to_string()
+                    }
+                    else{
+                        "".to_string()
+                    };
                 }
                 set_right_area(text_list, add_text);
             }
@@ -154,15 +158,15 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
                         set_left_extend(text_list, is_ctrl);
                     }
                     else{
-                        if *is_ctrl{
+                        let add_text = if *is_ctrl{
                             let list = get_front_ctrl(text_list[1].clone());
                             text_list[1] = list[0].clone();
-                            text_list[2] = list[1].clone() + &text_list[2];
+                            list[1].clone()
                         }
                         else{
-                            let remove = text_list[1].pop();
-                            text_list[2] = remove.unwrap().to_string() + &text_list[2];
-                        }
+                            text_list[1].pop().unwrap().to_string()
+                        };
+                        text_list[2].insert_str(0, &add_text);
                     }
                 }
                 Direction::Right => {
@@ -173,15 +177,16 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
                         set_right_extend(text_list, is_ctrl);
                     }
                     else{
-                        if *is_ctrl{
+                        let add_text = if *is_ctrl{
                             let list = get_back_ctrl(text_list[1].clone());
                             text_list[1] = list[1].clone();
-                            text_list[0] = text_list[0].clone() + &list[0];
+                            list[0].clone()
                         }
                         else{
-                            let remove = text_list[1].front_pop();
-                            text_list[0] = text_list[0].clone()+&remove.unwrap().to_string();
-                        }
+                            text_list[1].front_pop().unwrap().to_string()
+                            
+                        };
+                        text_list[0].push_str(&add_text);
                     }
                 }
                 Direction::Up => {
@@ -197,7 +202,7 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
                             text_list[1].split_chars_at(change_select_usize-text_list[0].size())
                         };
                         text_list[1] = list[0].to_string();
-                        text_list[2] = list[1].to_string() + &text_list[2];
+                        text_list[2].insert_str(0, &list[1]);
                     }
                 }
                 Direction::Down => {
@@ -213,7 +218,7 @@ pub fn set_select_text_list(key: &SelectType,text_list: &mut [String; 3],text_fi
                             text_list[1].split_chars_at(change_select_usize-text_list[0].size())
                         };
                         text_list[1] = list[1].to_string();
-                        text_list[0] = text_list[0].clone() + &list[0];
+                        text_list[0].push_str(&list[0]);
                     }
                 }
             }

@@ -1,55 +1,53 @@
 
+use std::{cmp::min, time::Instant};
+
 use bevy::{
-    ecs::{entity::Entity, event::EventReader, system::{Commands, Query, Res, ResMut}},
-    hierarchy::Children,
-    input::{keyboard::{KeyCode, KeyboardInput}, ButtonInput},
-    text::TextSpan,
-    window::Ime
+    ecs::{entity::Entity, event::EventReader, hierarchy::Children, query::{Changed, With}, system::{Commands, Query, Res, ResMut}}, input::{keyboard::{KeyCode, KeyboardInput}, ButtonInput}, sprite::Sprite, text::{Text2d, TextLayoutInfo, TextSpan}, window::Ime
 };
 
 use crate::{
-    cursur::TextCursor,
-    event::{EnterEvent, TextEdited},
-    text_field::{Select, TextField, TextFieldPosition},
-    tool::splite_text,
-    LastEmoji
+    event::{EnterEvent, TextEdited}, text_field::{Select, TextField, TextFieldPosition}, tool::{is_emoji, splite_text, ToolString}, LastEmoji
 };
 
 use super::{
     select_input::{get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType},
     text_input::{get_text_informtype, set_text_list, KeyType}
 };
-
+//메인 함수
 pub(crate) fn update_input(
     mut commands: Commands,
     last_emoji: ResMut<LastEmoji>,
     evr_ime: EventReader<Ime>,
     evr_kbd: EventReader<KeyboardInput>,
     res_kbd: Res<ButtonInput<KeyCode>>,
-    mut q_textfield: Query<(Entity,&mut TextField,&TextCursor,&Children)>,
-    mut q_child_text: Query<(&mut TextSpan,&mut TextFieldPosition)>,
+    mut q_textfield: Query<(Entity,&mut TextField)>,
 ) {
 
     let key_list = get_keys(last_emoji,evr_ime, evr_kbd,res_kbd);
 
-    for (entity,mut text_field,cursor,children) in q_textfield.iter_mut(){
+    for (entity,mut text_field) in q_textfield.iter_mut(){
         if !text_field.is_focuse {continue;}
 
-        let mut text_list = [const { String::new() }; 3];
         let mut is_text_change = false;
-        let is_enter = key_list.contains(&KeyInform { is_ime: false, is_finish: true, key: InformType::KeyType(KeyType::Text("\n".to_string())) });
+        let mut is_enter = false;
+
         if !key_list.is_empty(){
-            text_list = get_changed_text_list(&key_list, &mut text_field);
+            set_text_field(&key_list, &mut text_field);
             is_text_change = true;
+            is_enter = key_list.contains(&KeyInform { 
+                is_ime: false,
+                is_finish: true,
+                key: InformType::KeyType(KeyType::Text("\n".to_string())) 
+            });
         }
 
-        update_text_field(children, &mut q_child_text, is_text_change, text_list, cursor);
-
+        //event
         if is_text_change{
             commands.get_entity(entity).unwrap().trigger(TextEdited {
                 text_field: text_field.clone(),
                 entity: entity
             });
+            text_field.last_change_time = Instant::now()
         }
 
         if is_enter{
@@ -63,26 +61,38 @@ pub(crate) fn update_input(
 
 }
 
-pub(crate) fn update_text_field(
+pub(crate) fn reload_text_fields(
+    q_field_inform: Query<(&TextField,&Children),Changed<TextField>>,
+    mut q_child_text: Query<(&mut TextSpan,&mut TextFieldPosition)>,
+){
+    for (text_field,children) in q_field_inform.iter(){
+        reload_text_field(text_field, children, &mut q_child_text);
+    }   
+}
+
+pub(crate) fn reload_text_field(
+    text_field: &TextField,
     children: &Children,
     q_child_text: &mut Query<(&mut TextSpan,&mut TextFieldPosition)>,
-    is_update: bool,
-    text_list: [String; 3],
-    cursor: &TextCursor
 ) {
+    let text_list = splite_text(text_field.text.clone(), text_field.select);
+
     for child in children.iter(){
 
-        let (mut span,mut position) = q_child_text.get_mut(*child).unwrap();
-
-        if is_update {
+        if let Ok((mut span,mut position))= q_child_text.get_mut(*child){
             match *position {
                 TextFieldPosition::Front => {
                     **span = text_list[0].clone();
                 }
                 TextFieldPosition::Select(_) => {
-                    **span = text_list[1].clone();
-                    if span.0.chars().count() != 0{
-                        *position = TextFieldPosition::Select(span.0.clone());
+                    if text_list[1].is_empty(){
+                        **span = "|".to_string();
+                    }
+                    else{
+                        **span = "|".to_string() + &text_list[1] + &"|";
+                    }
+                    if text_list[1].chars().count() != 0{
+                        *position = TextFieldPosition::Select(text_list[1].clone());
                     }
                     else {
                         *position = TextFieldPosition::Select(String::new());
@@ -92,18 +102,7 @@ pub(crate) fn update_text_field(
                     **span = text_list[2].clone();
                 }
             }
-
-        }
-
-        if let TextFieldPosition::Select(select) = position.into_inner() {
-            if select.is_empty(){
-                if cursor.is_see {
-                    **span = "|".to_string();
-                }
-                else {
-                    **span = String::new();
-                }
-            }   
+    
         }
     }
 
@@ -120,19 +119,38 @@ pub(crate) fn get_keys(
 
     for ime in evr_ime.read(){
         //println!("{:?}",ime);
-
         match ime {
             Ime::Commit { value,.. } => {
                 if value == &"".to_string() {continue;}
-                if value.chars().count() > 1 {
+                if value.chars().count() > 1 && last_emoji.0 != None {
                     last_emoji.0 = None;
                     continue;
                 }
-                list.push(KeyInform {
-                    is_ime: true,
-                    is_finish:true,
-                    key: InformType::KeyType(KeyType::Text(value.clone()))
-                });
+                
+                let first_ch = value.clone().front_pop().unwrap();
+                if is_emoji(first_ch) {
+                    list.push(KeyInform {
+                        is_ime: false,
+                        is_finish: true,
+                        key: InformType::KeyType(KeyType::Text(value.clone()))
+                    });
+                }
+                else {
+                    if value.chars().count() > 1 {
+                        list.push(KeyInform {
+                            is_ime: false,
+                            is_finish: true,
+                            key: InformType::KeyType(KeyType::Text(value.clone()))
+                        });
+                    }
+                    else {
+                        list.push(KeyInform {
+                            is_ime: true,
+                            is_finish:true,
+                            key: InformType::KeyType(KeyType::Text(value.clone()))
+                        });
+                    }
+                }
             }
             Ime::Preedit {  value, cursor,.. } => {
                 if value == &"".to_string() {continue;}
@@ -186,13 +204,12 @@ pub(crate) fn get_keys(
     list
 }
 
-pub(crate) fn get_changed_text_list(
+pub(crate) fn set_text_field(
     key_list: &Vec<KeyInform>,
     text_field: &mut TextField,
-) -> [String; 3] {
+){
 
     let mut text_list = splite_text(text_field.text.clone(), text_field.select.clone());
-
     for key_inform in key_list{
 
         if key_inform.is_finish{
@@ -209,7 +226,7 @@ pub(crate) fn get_changed_text_list(
                 
                 match &key_inform.key {
                     InformType::KeyType(key) => {
-                        set_text_list(key, &mut text_list);
+                        set_text_list(key, &mut text_list,text_field);
                     }
                     InformType::SelectType(key) => {
                         if set_select_text_list(key,&mut text_list,text_field){
@@ -236,19 +253,26 @@ pub(crate) fn get_changed_text_list(
             }
         }
     }
-
-    text_field.text = text_list.concat();
-    let num = text_list[0].chars().count();
-    let select_num = text_list[1].chars().count();
+    let mut change_text = text_list.concat();
+    let mut select_start_num = text_list[0].chars().count();
+    let mut select_num = text_list[1].chars().count();
     let last_select = if select_num == 0{
         None
     }else {
         text_field.select.2
     };
-    text_field.select = Select(num,num+select_num,last_select);
 
-    text_list
-    
+    if let Some(num) = text_field.max_text{
+        if num < change_text.chars().collect::<Vec<char>>().len(){
+            change_text = change_text.slice(num);
+            text_field.is_before_text_ime = false;
+            select_start_num = min(num, select_start_num);
+            select_num = min(num, select_start_num+select_num)-select_start_num;
+        }   
+    }
+    text_field.text = change_text;
+
+    text_field.select = Select(select_start_num,select_start_num+select_num,last_select);
 }
 
 #[derive(PartialEq, Eq)]
@@ -263,3 +287,25 @@ pub(crate) enum InformType{
     KeyType(KeyType),
     SelectType(SelectType)
 }
+
+pub(crate) fn change_sprite_size(
+    mut q_text2d: Query<(&mut Sprite, &TextLayoutInfo),(With<Text2d>,With<TextField>,Changed<TextLayoutInfo>)>
+) {
+    for (mut sprite, info) in q_text2d.iter_mut(){
+        sprite.custom_size = Some(info.size);
+    }
+}
+
+/*
+현재
+1.키 가져오기
+2.리스트 가져오기
+3.자식등 변경
+
+변경
+1.키가져오기
+2.리스트 가져오기
+
+3.이벤트로 자식 변경
+
+*/

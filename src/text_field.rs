@@ -1,11 +1,20 @@
-use std::time::Duration;
+use std::time::Instant;
 
 use bevy::{
-    color::{palettes::css::{GRAY, WHITE}, Color},
-    ecs::{component::Component, entity::Entity, query::{Added, Changed, With}, system::{Commands, Query, Resource}},
-    hierarchy::{BuildChildren, Children},
-    text::{Text2d, TextColor, TextFont, TextSpan},
-    time::{Timer, TimerMode},
+    color::{palettes::css::{GRAY, WHITE}, Color, Srgba},
+    ecs::{
+        component::Component, 
+        entity::Entity, 
+        hierarchy::Children, 
+        observer::Trigger, 
+        query::{Added, Changed, With}, 
+        resource::Resource, 
+        system::{Commands, Query, Res, ResMut}
+    }, 
+    input::{mouse::MouseButton, ButtonInput}, 
+    picking::{events::{Out, Over, Pointer}, Pickable}, 
+    sprite::Sprite, 
+    text::{Text2d, TextColor, TextFont, TextSpan}, 
     ui::widget::Text
 };
 
@@ -18,8 +27,23 @@ pub(crate) struct LastEmoji(pub Option<String>);
  pub struct TextField{
     pub is_focuse: bool,
     pub text: String,
-    pub(crate)  select: Select,
-    pub(crate) is_before_text_ime: bool,
+    pub max_text: Option<usize>,
+    pub select: Select,
+    pub is_before_text_ime: bool,
+    pub last_change_time: Instant
+}
+
+impl Default for TextField{
+    fn default() -> Self {
+        Self {
+            is_focuse: false,
+            text: String::new(),
+            max_text: None,
+            select: Select(0, 0, None),
+            is_before_text_ime: false,
+            last_change_time: Instant::now(),
+        }
+    }
 }
 
 #[derive(Debug,Clone, Copy)]
@@ -46,7 +70,7 @@ impl Select {
 }
 
 #[derive(Component)]
-struct SelectChild;
+pub(crate) struct SelectChild;
 
 impl TextField {
     pub fn new(is_foucs: bool) -> (Self,TextCursor,Text){
@@ -54,32 +78,27 @@ impl TextField {
         (
             TextField { 
                 is_focuse: is_foucs,
-                text: String::new(),
-                select: Select(0,0,None),
-                is_before_text_ime: false
+                ..Default::default()
             },
-            TextCursor {
-                is_see: true,
-                timer: Timer::new(Duration::from_secs_f32(100000.0), TimerMode::Repeating)
-            },
+            TextCursor::default(),
             Text::default()
         )
         
     }
-    pub fn new2d(is_foucs: bool) -> (Self,TextCursor,Text2d){
+    pub fn new2d(is_foucs: bool) -> (Self,TextCursor,Text2d,Sprite,Pickable){
         
         (
             TextField { 
                 is_focuse: is_foucs,
-                text: String::new(),
-                select: Select(0,0,None),
-                is_before_text_ime: false 
+                ..Default::default()
             },
-            TextCursor {
-                is_see: true,
-                timer: Timer::new(Duration::from_secs_f32(10000000.0), TimerMode::Repeating)
+            TextCursor::default(),
+            Text2d::default(),
+            Sprite {
+                color: Srgba::new(0.0, 0.0, 0.0, 0.0).into(),
+                ..Default::default()
             },
-            Text2d::default()
+            Pickable::default()
         )
         
     }
@@ -119,16 +138,63 @@ pub(crate) fn add_textfield_child(
             text_style.get_text_style()
         )).id();
 
-        commands.entity(parent).add_children(&[
+        commands.entity(parent)
+        .add_children(&[
             front,
             selection,
             back
-        ]);
+        ])
+        .observe(change_remove_cursur_over_field)
+        .observe(change_add_cursur_over_field);
 
     }
 }
 
-#[derive(Component,Debug,PartialEq)]
+#[derive(Resource)]
+pub struct OverField(pub Option<Entity>);
+
+fn change_add_cursur_over_field(
+    trigger: Trigger<Pointer<Over>>,
+    mut over_field: ResMut<OverField>
+) {
+    over_field.0 = Some(trigger.target);
+    println!("Changed!!");
+}
+
+fn change_remove_cursur_over_field(
+    trigger: Trigger<Pointer<Out>>,
+    mut over_field: ResMut<OverField>
+) {
+    if let Some(entity) = over_field.0{
+        if entity == trigger.target{
+            over_field.0 = None;
+            println!("Out")
+        }
+    }
+}
+
+pub(crate) fn change_focuse(
+    mut q_text_field: Query<(&mut TextField,Entity)>,
+    over_field: Res<OverField>,
+    button_input: Res<ButtonInput<MouseButton>>
+) {
+    let focus = over_field.0;
+    for click in button_input.get_just_pressed(){
+        if *click != MouseButton::Left {
+            continue;
+        }
+        for (mut field, entity) in q_text_field.iter_mut(){
+            if focus == None {
+                field.is_focuse = false;
+            }
+            else {
+                field.is_focuse = entity == focus.unwrap();
+            }
+        }
+    }
+}
+
+#[derive(Component,Debug,PartialEq,Clone)]
 pub(crate) enum TextFieldPosition {
     Front,
     Select(String),
