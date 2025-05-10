@@ -1,6 +1,8 @@
 use bevy::input::keyboard::Key;
 use clipboard_win::{get_clipboard_string, set_clipboard_string};
 
+use crate::text_field::TextField;
+
 use super::input::InformType;
 
 #[derive(PartialEq, Eq,Debug)]
@@ -24,20 +26,11 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bo
         }
         Key::Character(msg) => {
             let s_msg = msg.to_string();
-            if (s_msg == "V" || s_msg == "v") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Paste))
-            }
-            else if (s_msg == "c" || s_msg == "C") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Copy))
-            }
-            else if (s_msg == "x" || s_msg == "X") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::Cut))
-            }
-            else if (s_msg == "a" || s_msg == "A") && is_ctrl{
-                *add_key = Some(InformType::KeyType(KeyType::AllSelect))
+            if is_ctrl{
+                set_ctrl_key(add_key, s_msg);
             }
             else{
-                *add_key = Some(InformType::KeyType(KeyType::Text(msg.to_string())));
+                *add_key = Some(InformType::KeyType(KeyType::Text(s_msg)));
             }
         }
         Key::Enter => {
@@ -50,7 +43,23 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bo
     }
 }
 
-pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3]){
+fn set_ctrl_key(add_key: &mut Option<InformType>,s_msg: String){
+    let msg = s_msg.to_uppercase();
+    if msg == "V"{
+        *add_key = Some(InformType::KeyType(KeyType::Paste))
+    }
+    else if msg == "C"{
+        *add_key = Some(InformType::KeyType(KeyType::Copy))
+    }
+    else if msg == "X"{
+        *add_key = Some(InformType::KeyType(KeyType::Cut))
+    }
+    else if msg == "A"{
+        *add_key = Some(InformType::KeyType(KeyType::AllSelect))
+    }
+}
+
+pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3],text_field: &TextField){
     let mut reset_select = true;
     match key {
         KeyType::Text(text) => {
@@ -60,7 +69,9 @@ pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3]){
             text_list[0] += &" ";
         }
         KeyType::BackSpace => {
-            text_list[0].pop();
+            if text_field.select.is_close(){
+                text_list[0].pop();
+            }
         }
         KeyType::Paste => {
             let paste_text = get_clipboard_string();

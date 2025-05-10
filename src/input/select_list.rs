@@ -7,43 +7,41 @@ use super::control::{get_back_ctrl, get_down_ctrl, get_front_ctrl, get_up_ctrl};
 
 pub(super) fn set_left_area_ctrl(text_list: &mut [String; 3],changed_list: [String; 2]){
     text_list[0] = changed_list[0].clone();
-    text_list[2] = changed_list[1].clone() +&text_list[1] + &text_list[2];
+    text_list[2].insert_str(0, &(changed_list[1].clone() + &text_list[1]));
 }
 
 pub(super) fn set_left_area(text_list: &mut [String; 3],add_text: String){
-    text_list[2] = add_text + &text_list[1].clone() + &text_list[2];
+    text_list[2].insert_str(0, &(add_text + &text_list[1]));
 }
 
 pub(super) fn set_right_area_ctrl(text_list: &mut [String; 3],changed_list: [String; 2]){
     text_list[2] = changed_list[1].clone();
-    text_list[0] = text_list[0].clone() + &text_list[1] + &changed_list[0];
+    text_list[0].push_str(&(text_list[1].clone() + &changed_list[0]));
 }
 
 pub(super) fn set_right_area(text_list: &mut [String; 3],add_text: String){
-    text_list[0] = text_list[0].clone() + &text_list[1] + &add_text;
+    text_list[0].push_str(&(text_list[1].clone() + &add_text));
 }
 
 pub(super) fn set_left_extend(text_list: &mut [String; 3],is_ctrl: &bool){
     if *is_ctrl{
         let list = get_front_ctrl(text_list[0].clone());
         text_list[0] = list[0].clone();
-        text_list[1] = list[1].clone() + &text_list[1];
+        text_list[1].insert_str(0, &list[1]);
     }
-    else{
-        let remove = text_list[0].pop();
-        text_list[1] = remove.unwrap().to_string() + &text_list[1];
+    else if let Some(remove) = text_list[0].pop() {
+        text_list[1].insert(0, remove);
     }
 }
 
 pub(super) fn set_right_extend(text_list: &mut [String; 3],is_ctrl: &bool){
     if *is_ctrl{
         let list = get_back_ctrl(text_list[2].clone());
-        text_list[1] = text_list[1].clone() + &list[0];
+        text_list[1].push_str(&list[0]);
         text_list[2] = list[1].clone();
     }
-    else {
-        let remove = text_list[2].front_pop();
-        text_list[1] = text_list[1].clone() + &remove.unwrap().to_string();
+    else if let Some(remove) = text_list[2].front_pop(){
+        text_list[1].push(remove);
     }
 }
 
@@ -56,7 +54,7 @@ pub(super) fn set_up_extend(text_list: &mut [String; 3],text_field:&mut TextFiel
         text_list[0].split_chars_at(change_select_usize)
     };
     text_list[0] = list[0].to_string();
-    text_list[1] = list[1].to_string() + &text_list[1];
+    text_list[1].insert_str(0, &list[1]);
 }
 
 pub(super) fn set_down_extend(text_list: &mut [String; 3],text_field:&mut TextField,is_ctrl: &bool){
@@ -68,12 +66,12 @@ pub(super) fn set_down_extend(text_list: &mut [String; 3],text_field:&mut TextFi
         text_list[2].split_chars_at(change_select_usize-text_list[0].size()-text_list[1].size())
     };
     text_list[2] = list[1].to_string();
-    text_list[1] = text_list[1].clone() + &list[0];
+    text_list[1].push_str(&list[0]);
 }
 
 pub(super) fn get_up_usize(text_list: &mut [String; 3],select: usize) -> usize{
     let text = text_list.concat();
-    let list: Vec<&str> = text.split("\n").collect();
+    let list: Vec<&str> = text.lines().collect();
     let mut last_line_inform: (usize,usize) = (0,0);
     let mut all_size = 0;
     for line in list{
@@ -95,7 +93,7 @@ pub(super) fn get_up_usize(text_list: &mut [String; 3],select: usize) -> usize{
 }
 pub(super) fn get_down_usize(text_list: &mut [String; 3],select: usize) -> usize{
     let text = text_list.concat();
-    let list: Vec<&str> = text.split("\n").collect();
+    let list: Vec<&str> = text.lines().collect();
     let mut is_now: (bool,usize) = (false,0);
     let mut all_size = 0;
 

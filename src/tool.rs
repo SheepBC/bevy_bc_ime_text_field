@@ -17,6 +17,8 @@ pub trait ToolString {
     fn front_pop(&mut self) -> Option<char>;
 
     fn size(&self) -> usize;
+
+    fn slice(&self, num: usize) -> String;
 }
 
 impl ToolString for String {
@@ -36,4 +38,22 @@ impl ToolString for String {
     fn size(&self) -> usize {
         self.chars().count()
     }
+
+    fn slice(&self, num: usize) -> String{
+        let arr: Vec<String> = self.chars().map(|c| c.to_string()).collect();
+        if num > arr.len() {return self.clone();}
+        arr[0..num].join("")
+    }
+}
+
+pub(crate) fn is_emoji(c: char) -> bool {
+    matches!(c as u32,
+        0x1F600..=0x1F64F | // 감정
+        0x1F300..=0x1F5FF | // 기호와 객체
+        0x1F680..=0x1F6FF | // 교통과 장소
+        0x2600..=0x26FF   | // 기타 기호
+        0x2700..=0x27BF   | // 딩뱃
+        0x1F900..=0x1F9FF | // 추가 이모지
+        0x1FA70..=0x1FAFF   // 최근 이모지
+    )
 }

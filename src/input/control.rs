@@ -145,6 +145,7 @@ pub(super) fn get_up_ctrl(mut text: String) -> [String; 2]{
             return [text,"\n".to_string()];
         }
         let list = text.split("\n").collect::<Vec<&str>>();
+        println!("{:?}",list);
         let split_list = list.split_last();
         if let Some((last,other)) = split_list{
             let mut front = String::new();
