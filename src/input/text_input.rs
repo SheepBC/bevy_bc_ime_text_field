@@ -1,35 +1,39 @@
 use bevy::input::keyboard::Key;
 use clipboard_win::{get_clipboard_string, set_clipboard_string};
-
+use crate::input::control::get_front_ctrl;
 use crate::text_field::TextField;
 
 use super::input::InformType;
 
-#[derive(PartialEq, Eq,Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub(crate) enum KeyType {
     BackSpace,
+    CtrlBackSpace,
     Space,
     Copy,
     Paste,
     Cut,
     AllSelect,
-    Text(String)
+    Text(String),
 }
 
-pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bool){
+pub fn get_text_inform_type(key: Key, add_key: &mut Option<InformType>, is_ctrl: bool) {
     match key {
         Key::Space => {
             *add_key = Some(InformType::KeyType(KeyType::Space));
         }
         Key::Backspace => {
-            *add_key = Some(InformType::KeyType(KeyType::BackSpace));
+            if is_ctrl {
+                *add_key = Some(InformType::KeyType(KeyType::CtrlBackSpace));
+            } else {
+                *add_key = Some(InformType::KeyType(KeyType::BackSpace));
+            }
         }
         Key::Character(msg) => {
             let s_msg = msg.to_string();
-            if is_ctrl{
+            if is_ctrl {
                 set_ctrl_key(add_key, s_msg);
-            }
-            else{
+            } else {
                 *add_key = Some(InformType::KeyType(KeyType::Text(s_msg)));
             }
         }
@@ -43,23 +47,20 @@ pub fn get_text_informtype(key: Key,add_key: &mut Option<InformType>,is_ctrl: bo
     }
 }
 
-fn set_ctrl_key(add_key: &mut Option<InformType>,s_msg: String){
+fn set_ctrl_key(add_key: &mut Option<InformType>, s_msg: String) {
     let msg = s_msg.to_uppercase();
-    if msg == "V"{
+    if msg == "V" {
         *add_key = Some(InformType::KeyType(KeyType::Paste))
-    }
-    else if msg == "C"{
+    } else if msg == "C" {
         *add_key = Some(InformType::KeyType(KeyType::Copy))
-    }
-    else if msg == "X"{
+    } else if msg == "X" {
         *add_key = Some(InformType::KeyType(KeyType::Cut))
-    }
-    else if msg == "A"{
+    } else if msg == "A" {
         *add_key = Some(InformType::KeyType(KeyType::AllSelect))
     }
 }
 
-pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3],text_field: &TextField){
+pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &TextField) {
     let mut reset_select = true;
     match key {
         KeyType::Text(text) => {
@@ -69,13 +70,17 @@ pub fn set_text_list(key: &KeyType,text_list: &mut [String; 3],text_field: &Text
             text_list[0] += &" ";
         }
         KeyType::BackSpace => {
-            if text_field.select.is_close(){
+            if text_field.select.is_close() {
                 text_list[0].pop();
             }
         }
+        KeyType::CtrlBackSpace => {
+            let list = get_front_ctrl(text_list[0].clone() + &text_list[1]);
+            text_list[0] = list[0].clone();
+        }
         KeyType::Paste => {
             let paste_text = get_clipboard_string();
-            if let Ok(text) = paste_text{
+            if let Ok(text) = paste_text {
                 text_list[0] += &text;
             }
         }
