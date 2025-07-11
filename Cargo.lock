@@ -438,6 +438,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_bc_ime_text_field"
+version = "0.0.1"
+dependencies = [
+ "bevy",
+ "clipboard-win",
+]
+
+[[package]]
 name = "bevy_color"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -677,14 +685,6 @@ dependencies = [
  "thiserror 2.0.12",
  "tracing",
  "wgpu-types",
-]
-
-[[package]]
-name = "bevy_ime_text_field"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "clipboard-win",
 ]
 
 [[package]]
@@ -1520,6 +1520,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15efe7a882b08f34e38556b14f2fb3daa98769d06c7f0c1b076dfd0d983bc892"
 dependencies = [
  "error-code",
+ "windows-win",
 ]
 
 [[package]]
@@ -4708,6 +4709,15 @@ dependencies = [
  "windows_x86_64_gnu 0.53.0",
  "windows_x86_64_gnullvm 0.53.0",
  "windows_x86_64_msvc 0.53.0",
+]
+
+[[package]]
+name = "windows-win"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58e23e33622b3b52f948049acbec9bcc34bf6e26d74176b88941f213c75cf2dc"
+dependencies = [
+ "error-code",
 ]
 
 [[package]]

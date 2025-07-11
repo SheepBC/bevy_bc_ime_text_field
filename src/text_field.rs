@@ -91,7 +91,7 @@ impl TextField {
         )
     }
 }
-
+/// start, end, startPoint
 #[derive(Debug, Clone, Copy)]
 pub struct Select(pub usize, pub usize, pub Option<usize>);
 
@@ -212,7 +212,6 @@ fn change_remove_cursor_over_field(
     if let Some(entity) = over_field.0 {
         if entity == trigger.target {
             over_field.0 = None;
-            println!("Out")
         }
     }
 }

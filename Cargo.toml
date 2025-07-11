@@ -1,8 +1,19 @@
 [package]
-name = "bevy_ime_text_field"
-version = "0.1.0"
+name = "bevy_bc_ime_text_field"
+version = "0.0.1"
 edition = "2024"
+license = "MIT"
+description="A simple IME-compatible text field plugin for Bevy (Windows only). Supports both UI and 2D text input."
+repository = "https://github.com/SheepBC/bevy_bc_ime_text_field"
+readme = "README.md"
 
 [dependencies]
-bevy = "0.16.0"
-clipboard-win = "5.4.0"
+bevy = { version = "0.16.0", features = [
+    "bevy_color",
+    "bevy_text",
+    "bevy_picking",
+    "bevy_sprite",
+    "bevy_ui",
+    "bevy_window"
+] }
+clipboard-win = {version = "5.4.0", features = ["windows-win"]}

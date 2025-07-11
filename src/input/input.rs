@@ -128,7 +128,6 @@ pub(crate) fn get_keys(
     let mut list: Vec<KeyInform> = Vec::new();
 
     for ime in evr_ime.read() {
-        //println!("{:?}",ime);
         match ime {
             Ime::Commit { value, .. } => {
                 if value == &"".to_string() {

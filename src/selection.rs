@@ -1,4 +1,4 @@
-use std::fmt::format;
+
 use std::time::{Duration, Instant};
 
 use bevy::{
@@ -11,7 +11,6 @@ use bevy::{
     text::TextSpan,
     time::{Time, Timer, TimerMode},
 };
-use crate::input::select_input::set_select_text_list;
 use crate::text_field::{SelectChild, TextFieldInfo, TextFieldInput, TextFieldPosition};
 
 #[derive(Component)]
