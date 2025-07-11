@@ -17,8 +17,8 @@ Add this to your `Cargo.toml`:
 bevy_bc_ime_text_field = "0.0.1"
 ```
 | `bevy` Version | `bevy_bc_ime_text_field` Version |
-| -------------- | -------------------------------- | 
-| `0.16`         | `0.0.1`                          |
+| -------------- |----------------------------------| 
+| `0.16`         | `0.0.1` ~                        |
 
 
 # 🚀 Example
