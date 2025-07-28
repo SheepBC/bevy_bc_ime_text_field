@@ -1,5 +1,8 @@
 use std::time::Instant;
 
+use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::splite_text};
+use bevy::prelude::{Changed, Children, With};
+use bevy::text::TextColor;
 use bevy::{
     color::Srgba,
     ecs::{
@@ -10,17 +13,15 @@ use bevy::{
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
     },
-    input::{ButtonInput, mouse::MouseButton},
+    input::{mouse::MouseButton, ButtonInput},
     picking::{
-        Pickable,
         events::{Out, Over, Pointer},
+        Pickable,
     },
     sprite::Sprite,
     text::{Text2d, TextSpan},
     ui::widget::Text,
 };
-
-use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::splite_text};
 
 const TRANSPARENT: Srgba = Srgba::new(0.0, 0.0, 0.0, 0.0);
 
@@ -121,7 +122,8 @@ pub(crate) struct SelectChild;
 #[derive(Component)]
 pub struct TextFieldInfo {
     pub focus: bool,
-    pub max_lenght: Option<usize>,
+    pub max_length: Option<usize>,
+    pub placeholder: Option<String>,
     pub changeable_focus_with_click: bool,
 }
 
@@ -129,8 +131,32 @@ impl Default for TextFieldInfo {
     fn default() -> Self {
         Self {
             focus: true,
-            max_lenght: None,
+            max_length: None,
+            placeholder: None,
             changeable_focus_with_click: true,
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct Placeholder;
+
+pub fn change_placeholder_state(
+    field: Query<(&TextField,&TextFieldInfo,&Children),Changed<TextField>>,
+    mut placeholder: Query<&mut TextSpan,With<Placeholder>>
+
+){
+    for (field,info,children) in field{
+
+        let placeholder_text = match &info.placeholder {
+            Some(text) => text,
+            _ => ""
+        };
+
+        for child in children{
+            if let Ok(mut text) = placeholder.get_mut(*child){
+                text.0 = if field.text.len() == 0 {placeholder_text.to_string()} else { "".to_string() };
+            }
         }
     }
 }
@@ -152,9 +178,9 @@ impl Default for TextFieldInput {
 
 pub(crate) fn add_textfield_child(
     mut commands: Commands,
-    q_add_textfield: Query<(Entity, &TextField, Option<&TextFieldStyle>), Added<TextField>>,
+    q_add_textfield: Query<(Entity, &TextField, &TextFieldInfo,Option<&TextFieldStyle>), Added<TextField>>,
 ) {
-    for (parent, field, op_style) in q_add_textfield.iter() {
+    for (parent, field,info, op_style) in q_add_textfield.iter() {
         let list = splite_text(field.text.clone(), field.select);
 
         let text_style = match op_style {
@@ -187,9 +213,18 @@ pub(crate) fn add_textfield_child(
             ))
             .id();
 
+        let text = if let Some(tx) = &info.placeholder { tx }else { "" };
+
+        let placeholder = commands.spawn((
+            TextSpan::new(text),
+            text_style.font.clone(),
+            TextColor(text_style.placeholder_color),
+            Placeholder
+        )).id();
+
         commands
             .entity(parent)
-            .add_children(&[front, selection, back])
+            .add_children(&[front, selection, back, placeholder])
             .observe(change_remove_cursor_over_field)
             .observe(change_add_cursor_over_field);
     }

@@ -95,6 +95,7 @@ use text_field::{
     LastEmoji, OverField, add_essential_component, add_textfield_child, change_focuse,
 };
 use text_field_style::text_style_changed;
+use crate::text_field::{change_placeholder_state};
 
 pub mod event;
 pub mod selection;
@@ -113,6 +114,7 @@ impl Plugin for ImeTextFieldPlugin {
             .add_systems(Update, update_text_cursor_timer)
             .add_systems(Update, text_style_changed)
             .add_systems(Update, add_textfield_child)
+            .add_systems(Update, change_placeholder_state)
             .add_systems(Update, update_cursor)
             .add_systems(Update, change_sprite_size)
             .add_systems(Update, change_focuse)

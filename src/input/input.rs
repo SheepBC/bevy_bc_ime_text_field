@@ -268,7 +268,7 @@ pub(crate) fn set_text_field(
         text_field.select.2
     };
 
-    if let Some(num) = field_info.max_lenght {
+    if let Some(num) = field_info.max_length {
         if num < change_text.chars().collect::<Vec<char>>().len() {
             change_text = change_text.slice(num);
             input.is_last_text_ime = false;
