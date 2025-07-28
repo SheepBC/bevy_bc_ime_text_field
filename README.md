@@ -14,7 +14,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy_bc_ime_text_field = "0.0.1"
+bevy_bc_ime_text_field = "VERSION"
 ```
 | `bevy` Version | `bevy_bc_ime_text_field` Version |
 | -------------- |----------------------------------| 
