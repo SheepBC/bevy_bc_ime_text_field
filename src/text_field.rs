@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::splite_text};
+use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::split_text};
 use bevy::prelude::{Changed, Children, With};
 use bevy::text::TextColor;
 use bevy::{
@@ -181,7 +181,7 @@ pub(crate) fn add_textfield_child(
     q_add_textfield: Query<(Entity, &TextField, &TextFieldInfo,Option<&TextFieldStyle>), Added<TextField>>,
 ) {
     for (parent, field,info, op_style) in q_add_textfield.iter() {
-        let list = splite_text(field.text.clone(), field.select);
+        let list = split_text(field.text.clone(), field.select);
 
         let text_style = match op_style {
             Some(style) => style,

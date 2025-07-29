@@ -1,8 +1,8 @@
 use crate::text_field::Select;
 
-pub fn splite_text(text: String, splite: Select) -> [String; 3] {
-    let front = text.split_chars_at(splite.0 as usize);
-    let other = front[1].split_chars_at((splite.1 - splite.0) as usize);
+pub fn split_text(text: String, split: Select) -> [String; 3] {
+    let front = text.split_chars_at(split.0);
+    let other = front[1].split_chars_at(split.1 - split.0);
 
     [
         front[0].to_string(),
@@ -50,16 +50,4 @@ impl ToolString for String {
         }
         arr[0..num].join("")
     }
-}
-
-pub(crate) fn is_emoji(c: char) -> bool {
-    matches!(c as u32,
-        0x1F600..=0x1F64F | // 감정
-        0x1F300..=0x1F5FF | // 기호와 객체
-        0x1F680..=0x1F6FF | // 교통과 장소
-        0x2600..=0x26FF   | // 기타 기호
-        0x2700..=0x27BF   | // 딩뱃
-        0x1F900..=0x1F9FF | // 추가 이모지
-        0x1FA70..=0x1FAFF   // 최근 이모지
-    )
 }

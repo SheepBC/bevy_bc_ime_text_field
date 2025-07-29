@@ -1,4 +1,4 @@
-#![cfg(target_os = "windows")]
+#![cfg(windows)]
 //! # bevy_bc_ime_text_field
 //!
 //! A simple IME-compatible text field plugin for **Bevy** (Windows only).

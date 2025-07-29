@@ -20,4 +20,4 @@ bevy = { version = "0.16.0", features = [
 clipboard-win = {version = "5.4.0", features = ["windows-win"]}
 
 [package.metadata.docs.rs]
-targets = ["x86_64-pc-windows-msvc"]
+default-target = "x86_64-pc-windows-msvc"

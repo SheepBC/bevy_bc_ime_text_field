@@ -9,8 +9,8 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     input::{
-        ButtonInput,
         keyboard::{KeyCode, KeyboardInput},
+        ButtonInput,
     },
     sprite::Sprite,
     text::{Text2d, TextLayoutInfo, TextSpan},
@@ -18,17 +18,17 @@ use bevy::{
 };
 
 use crate::{
-    LastEmoji,
     event::{EnterEvent, TextEdited},
     text_field::{Select, TextField, TextFieldInfo, TextFieldInput, TextFieldPosition},
-    tool::{ToolString, is_emoji, splite_text},
+    tool::{split_text, ToolString},
+    LastEmoji,
 };
 
 use super::{
     select_input::{
-        SelectType, get_select_informtype, get_select_shift_informtype, set_select_text_list,
+        get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType,
     },
-    text_input::{KeyType, get_text_inform_type, set_text_list},
+    text_input::{get_text_inform_type, set_text_list, KeyType},
 };
 //메인 함수
 pub(crate) fn update_input(
@@ -53,7 +53,7 @@ pub(crate) fn update_input(
             set_text_field(&key_list, &mut text_field, &mut input, field_info);
             is_text_change = true;
             is_enter = key_list.contains(&KeyInform {
-                is_ime: false,
+                is_ime: None,
                 is_finish: true,
                 key: InformType::KeyType(KeyType::Text("\n".to_string())),
             });
@@ -91,7 +91,7 @@ pub(crate) fn reload_text_field(
     children: &Children,
     q_child_text: &mut Query<(&mut TextSpan, &mut TextFieldPosition)>,
 ) {
-    let text_list = splite_text(text_field.text.clone(), text_field.select);
+    let text_list = split_text(text_field.text.clone(), text_field.select);
 
     for child in children.iter() {
         if let Ok((mut span, mut position)) = q_child_text.get_mut(*child) {
@@ -129,6 +129,42 @@ pub(crate) fn get_keys(
 
     for ime in evr_ime.read() {
         match ime {
+            Ime::Commit {value,.. } => {
+
+                list.push(KeyInform {
+                    is_ime: None,
+                    is_finish: true,
+                    key: InformType::KeyType(KeyType::Text(value.clone()))
+                });
+
+            }
+            Ime::Preedit {value,cursor,..} => {
+                if value.is_empty() && !cursor.is_none() {
+                    continue;
+                }
+
+                let num = if let Some(last) = last_emoji.0.clone() { last.size() }else { 1 };
+
+                last_emoji.0 = if let Some((a,b)) = cursor.clone() {
+                    if a+b == 0 {
+                        None
+                    }
+                    else {
+                        Some(value.clone())
+                    }
+                } else {
+                    None
+                };
+
+                list.push(KeyInform {
+                    is_ime: Some(num),
+                    is_finish: false,
+                    key: InformType::KeyType(KeyType::Text(value.clone()))
+                });
+
+            }
+            _ => {}
+            /*
             Ime::Commit { value, .. } => {
                 if value == &"".to_string() {
                     continue;
@@ -141,20 +177,20 @@ pub(crate) fn get_keys(
                 let first_ch = value.clone().front_pop().unwrap();
                 if is_emoji(first_ch) {
                     list.push(KeyInform {
-                        is_ime: false,
+                        is_ime: None,
                         is_finish: true,
                         key: InformType::KeyType(KeyType::Text(value.clone())),
                     });
                 } else {
                     if value.chars().count() > 1 {
                         list.push(KeyInform {
-                            is_ime: false,
+                            is_ime: None,
                             is_finish: true,
                             key: InformType::KeyType(KeyType::Text(value.clone())),
                         });
                     } else {
                         list.push(KeyInform {
-                            is_ime: true,
+                            is_ime: Some(0),
                             is_finish: true,
                             key: InformType::KeyType(KeyType::Text(value.clone())),
                         });
@@ -173,7 +209,7 @@ pub(crate) fn get_keys(
                     }
                     last_emoji.0 = Some(value.to_string());
                     list.push(KeyInform {
-                        is_ime: false,
+                        is_ime: None,
                         is_finish: true,
                         key: InformType::KeyType(KeyType::Text(text.clone())),
                     });
@@ -181,12 +217,13 @@ pub(crate) fn get_keys(
                 }
 
                 list.push(KeyInform {
-                    is_ime: true,
+                    is_ime: Some(0),
                     is_finish: false,
                     key: InformType::KeyType(KeyType::Text(value.clone())),
                 });
             }
             _ => {}
+             */
         }
     }
     let key_list = evr_kbd.read();
@@ -203,7 +240,7 @@ pub(crate) fn get_keys(
             }
             if let Some(key) = add_key {
                 list.push(KeyInform {
-                    is_ime: false,
+                    is_ime: None,
                     is_finish: true,
                     key: key,
                 });
@@ -220,14 +257,46 @@ pub(crate) fn set_text_field(
     input: &mut TextFieldInput,
     field_info: &TextFieldInfo,
 ) {
-    let mut text_list = splite_text(text_field.text.clone(), text_field.select.clone());
+    let mut text_list = split_text(text_field.text.clone(), text_field.select.clone());
     for key_inform in key_list {
+
         if key_inform.is_finish {
-            if key_inform.is_ime {
+            match &key_inform.key {
+                InformType::KeyType(key) => {
+                    set_text_list(key, &mut text_list, text_field);
+                }
+                InformType::SelectType(key) => {
+                    if set_select_text_list(key, &mut text_list, text_field) {
+                        break;
+                    }
+                }
+            }
+            input.is_last_text_ime = false;
+        }
+        else {
+            if let Some(mut num) = key_inform.is_ime {
+                if !input.is_last_text_ime {
+                    num = 0;
+                }
+
+                if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key {
+                    for _ in 0..num{
+                        text_list[0].pop();
+                    }
+                    text_list[0] += &text;
+                    text_list[1] = "".to_string();
+                }
+
+                input.is_last_text_ime = true;
+            }
+        }
+
+        /*
+        if key_inform.is_finish {
+            if let Some(num) = key_inform.is_ime {
                 if !input.is_last_text_ime {
                     continue;
                 }
-
                 if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key {
                     text_list[0].pop();
                     text_list[0] += &text;
@@ -258,7 +327,9 @@ pub(crate) fn set_text_field(
                 text_list[1] = "".to_string();
             }
         }
+        */
     }
+
     let mut change_text = text_list.concat();
     let mut select_start_num = text_list[0].chars().count();
     let mut select_num = text_list[1].chars().count();
@@ -281,14 +352,14 @@ pub(crate) fn set_text_field(
     text_field.select = Select(select_start_num, select_start_num + select_num, last_select);
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub(crate) struct KeyInform {
-    pub(crate) is_ime: bool,
+    pub(crate) is_ime: Option<usize>,
     pub(crate) is_finish: bool,
     key: InformType,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq,Debug)]
 pub(crate) enum InformType {
     KeyType(KeyType),
     SelectType(SelectType),
@@ -305,16 +376,3 @@ pub(crate) fn change_sprite_size(
     }
 }
 
-/*
-현재
-1.키 가져오기
-2.리스트 가져오기
-3.자식등 변경
-
-변경
-1.키가져오기
-2.리스트 가져오기
-
-3.이벤트로 자식 변경
-
-*/
