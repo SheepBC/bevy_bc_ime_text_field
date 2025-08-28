@@ -7,6 +7,8 @@ description="A simple IME-compatible text field plugin for Bevy (Windows only). 
 repository = "https://github.com/SheepBC/bevy_bc_ime_text_field"
 readme = "README.md"
 documentation = "https://docs.rs/bevy_bc_ime_text_field"
+categories = ["game-development", "gui", "text-editors"]
+keywords = ["bevy", "ui", "text", "input"]
 
 [dependencies]
 bevy = { version = "0.16.0", features = [
@@ -17,7 +19,7 @@ bevy = { version = "0.16.0", features = [
     "bevy_ui",
     "bevy_window"
 ] }
-clipboard-win = {version = "5.4.0", features = ["windows-win"]}
+arboard = "3.6.1"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"

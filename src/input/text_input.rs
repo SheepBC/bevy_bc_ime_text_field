@@ -1,5 +1,5 @@
+use arboard::Clipboard;
 use bevy::input::keyboard::Key;
-use clipboard_win::{get_clipboard_string, set_clipboard_string};
 use crate::input::control::get_front_ctrl;
 use crate::text_field::TextField;
 
@@ -79,17 +79,22 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &Te
             text_list[0] = list[0].clone();
         }
         KeyType::Paste => {
-            let paste_text = get_clipboard_string();
-            if let Ok(text) = paste_text {
-                text_list[0] += &text;
+            if let Ok(mut clip) = Clipboard::new() {
+                if let Ok(text) = clip.get_text(){
+                    text_list[0] += &text;
+                }
             }
         }
         KeyType::Copy => {
-            let _ = set_clipboard_string(text_list[1].as_str());
-            reset_select = false;
+            if let Ok(mut clip) = Clipboard::new() {
+                let _ =clip.set_text(text_list[1].clone());
+                reset_select = false;
+            }
         }
         KeyType::Cut => {
-            let _ = set_clipboard_string(text_list[1].as_str());
+            if let Ok(mut clip) = Clipboard::new() {
+                let _ =clip.set_text(text_list[1].clone());
+            }
         }
         KeyType::AllSelect => {
             text_list[1] = text_list[0].clone() + &text_list[1] + &text_list[2];
