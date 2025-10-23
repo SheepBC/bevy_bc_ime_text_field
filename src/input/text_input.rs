@@ -14,6 +14,8 @@ pub(crate) enum KeyType {
     Paste,
     Cut,
     AllSelect,
+    Undo,
+    Redo,
     Text(String),
 }
 
@@ -101,6 +103,12 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &Te
             text_list[0].clear();
             text_list[2].clear();
             reset_select = false;
+        }
+        KeyType::Undo => {
+
+        }
+        KeyType::Redo => {
+
         }
     }
     if reset_select {

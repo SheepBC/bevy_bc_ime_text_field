@@ -28,10 +28,17 @@ const TRANSPARENT: Srgba = Srgba::new(0.0, 0.0, 0.0, 0.0);
 #[derive(Resource)]
 pub(crate) struct LastEmoji(pub Option<String>);
 
+#[derive(Debug,Clone)]
+enum Change{
+    Add(Select,String),
+    Delete(Select,String)
+}
+
 #[derive(Debug, Component, Clone)]
 pub struct TextField {
     pub text: String,
     pub select: Select,
+    command: undo_2::Commands<Change>
 }
 
 impl Default for TextField {
@@ -39,6 +46,7 @@ impl Default for TextField {
         Self {
             text: String::new(),
             select: Select(0, 0, None),
+            command: undo_2::Commands::new()
         }
     }
 }
@@ -176,11 +184,11 @@ impl Default for TextFieldInput {
     }
 }
 
-pub(crate) fn add_textfield_child(
+pub(crate) fn add_text_field_child(
     mut commands: Commands,
-    q_add_textfield: Query<(Entity, &TextField, &TextFieldInfo,Option<&TextFieldStyle>), Added<TextField>>,
+    q_add_text_field: Query<(Entity, &TextField, &TextFieldInfo, Option<&TextFieldStyle>), Added<TextField>>,
 ) {
-    for (parent, field,info, op_style) in q_add_textfield.iter() {
+    for (parent, field,info, op_style) in q_add_text_field.iter() {
         let list = split_text(field.text.clone(), field.select);
 
         let text_style = match op_style {

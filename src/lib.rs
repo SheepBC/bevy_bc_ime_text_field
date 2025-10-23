@@ -93,7 +93,7 @@ use bevy::{
 use input::input::{change_sprite_size, reload_text_fields, update_input};
 use selection::{update_cursor, update_text_cursor_timer};
 use text_field::{
-    LastEmoji, OverField, add_essential_component, add_textfield_child, change_focuse,
+    LastEmoji, OverField, add_essential_component, add_text_field_child, change_focuse,
 };
 use text_field_style::text_style_changed;
 use crate::text_field::{change_placeholder_state};
@@ -114,7 +114,7 @@ impl Plugin for ImeTextFieldPlugin {
             .add_systems(Update, update_input)
             .add_systems(Update, update_text_cursor_timer)
             .add_systems(Update, text_style_changed)
-            .add_systems(Update, add_textfield_child)
+            .add_systems(Update, add_text_field_child)
             .add_systems(Update, change_placeholder_state)
             .add_systems(Update, update_cursor)
             .add_systems(Update, change_sprite_size)

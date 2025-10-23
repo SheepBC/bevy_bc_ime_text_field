@@ -23,7 +23,7 @@ use crate::{
     tool::{split_text, ToolString},
     LastEmoji,
 };
-
+use crate::text_field_style::{change_passwd, TextFieldStyle};
 use super::{
     select_input::{
         get_select_informtype, get_select_shift_informtype, set_select_text_list, SelectType,
@@ -78,17 +78,18 @@ pub(crate) fn update_input(
 }
 
 pub(crate) fn reload_text_fields(
-    q_field_inform: Query<(&TextField, &Children), Changed<TextField>>,
+    q_field_inform: Query<(&TextField,&TextFieldStyle, &Children), Changed<TextField>>,
     mut q_child_text: Query<(&mut TextSpan, &mut TextFieldPosition)>,
 ) {
-    for (text_field, children) in q_field_inform.iter() {
-        reload_text_field(text_field, children, &mut q_child_text);
+    for (text_field,style, children) in q_field_inform.iter() {
+        reload_text_field(text_field, children,style, &mut q_child_text);
     }
 }
 
 pub(crate) fn reload_text_field(
     text_field: &TextField,
     children: &Children,
+    style: &TextFieldStyle,
     q_child_text: &mut Query<(&mut TextSpan, &mut TextFieldPosition)>,
 ) {
     let text_list = split_text(text_field.text.clone(), text_field.select);
@@ -97,13 +98,21 @@ pub(crate) fn reload_text_field(
         if let Ok((mut span, mut position)) = q_child_text.get_mut(*child) {
             match *position {
                 TextFieldPosition::Front => {
-                    **span = text_list[0].clone();
+                    if style.password_style {
+                        **span = change_passwd(text_list[0].clone());
+                    }else {
+                        **span = text_list[0].clone();   
+                    }
                 }
                 TextFieldPosition::Select(_) => {
                     if text_list[1].is_empty() {
                         **span = "|".to_string();
                     } else {
-                        **span = "|".to_string() + &text_list[1] + &"|";
+                        if style.password_style {
+                            **span = "|".to_string() + &change_passwd(text_list[1].clone()) + &"|";
+                        }else {
+                            **span = "|".to_string() + &text_list[1] + &"|";
+                        }
                     }
                     if text_list[1].chars().count() != 0 {
                         *position = TextFieldPosition::Select(text_list[1].clone());
@@ -112,7 +121,11 @@ pub(crate) fn reload_text_field(
                     }
                 }
                 TextFieldPosition::Back => {
-                    **span = text_list[2].clone();
+                    if style.password_style {
+                        **span = change_passwd(text_list[2].clone());
+                    }else {
+                        **span = text_list[2].clone();
+                    }
                 }
             }
         }
@@ -164,66 +177,6 @@ pub(crate) fn get_keys(
 
             }
             _ => {}
-            /*
-            Ime::Commit { value, .. } => {
-                if value == &"".to_string() {
-                    continue;
-                }
-                if value.chars().count() > 1 && last_emoji.0 != None {
-                    last_emoji.0 = None;
-                    continue;
-                }
-
-                let first_ch = value.clone().front_pop().unwrap();
-                if is_emoji(first_ch) {
-                    list.push(KeyInform {
-                        is_ime: None,
-                        is_finish: true,
-                        key: InformType::KeyType(KeyType::Text(value.clone())),
-                    });
-                } else {
-                    if value.chars().count() > 1 {
-                        list.push(KeyInform {
-                            is_ime: None,
-                            is_finish: true,
-                            key: InformType::KeyType(KeyType::Text(value.clone())),
-                        });
-                    } else {
-                        list.push(KeyInform {
-                            is_ime: Some(0),
-                            is_finish: true,
-                            key: InformType::KeyType(KeyType::Text(value.clone())),
-                        });
-                    }
-                }
-            }
-            Ime::Preedit { value, cursor, .. } => {
-                if value == &"".to_string() {
-                    continue;
-                }
-                if cursor != &Some((0, 0)) {
-                    let mut text = value.clone();
-
-                    if let Some(last) = &last_emoji.0 {
-                        text = value.replacen(last, "", 1);
-                    }
-                    last_emoji.0 = Some(value.to_string());
-                    list.push(KeyInform {
-                        is_ime: None,
-                        is_finish: true,
-                        key: InformType::KeyType(KeyType::Text(text.clone())),
-                    });
-                    continue;
-                }
-
-                list.push(KeyInform {
-                    is_ime: Some(0),
-                    is_finish: false,
-                    key: InformType::KeyType(KeyType::Text(value.clone())),
-                });
-            }
-            _ => {}
-             */
         }
     }
     let key_list = evr_kbd.read();
@@ -291,43 +244,7 @@ pub(crate) fn set_text_field(
             }
         }
 
-        /*
-        if key_inform.is_finish {
-            if let Some(num) = key_inform.is_ime {
-                if !input.is_last_text_ime {
-                    continue;
-                }
-                if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key {
-                    text_list[0].pop();
-                    text_list[0] += &text;
-                    text_list[1] = "".to_string();
-                }
-            } else {
-                match &key_inform.key {
-                    InformType::KeyType(key) => {
-                        set_text_list(key, &mut text_list, text_field);
-                    }
-                    InformType::SelectType(key) => {
-                        if set_select_text_list(key, &mut text_list, text_field) {
-                            break;
-                        }
-                    }
-                }
-            }
-            input.is_last_text_ime = false;
-        } else {
-            if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key {
-                if input.is_last_text_ime {
-                    text_list[0].pop();
-                    text_list[0] += text;
-                } else {
-                    text_list[0] += text;
-                }
-                input.is_last_text_ime = true;
-                text_list[1] = "".to_string();
-            }
-        }
-        */
+        
     }
 
     let mut change_text = text_list.concat();

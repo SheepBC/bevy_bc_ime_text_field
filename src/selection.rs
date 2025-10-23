@@ -12,6 +12,7 @@ use bevy::{
     time::{Time, Timer, TimerMode},
 };
 use crate::text_field::{SelectChild, TextFieldInfo, TextFieldInput, TextFieldPosition};
+use crate::text_field_style::{change_passwd, TextFieldStyle};
 
 #[derive(Component)]
 pub struct TextFieldSelection {
@@ -47,13 +48,14 @@ pub(crate) fn update_cursor(
     q_field_inform: Query<(
         &TextFieldInfo,
         &TextFieldInput,
+        &TextFieldStyle,
         &Children,
         &TextFieldSelection,
     )>,
     mut q_child_text: Query<(&mut TextSpan, &mut TextFieldPosition), With<SelectChild>>,
 ) {
     let now = Instant::now();
-    for (field_info, input, children, cursor) in q_field_inform.iter() {
+    for (field_info, input, style,children, cursor) in q_field_inform.iter() {
         for child in children.iter() {
             
             let Ok((mut span, position)) = q_child_text.get_mut(*child) else { continue };
@@ -67,13 +69,17 @@ pub(crate) fn update_cursor(
                     **span = if select.is_empty() {
                         "|".to_string()
                     } else { 
-                      format!("|{select}|")  
+                        if style.password_style {
+                            format!("|{}|",change_passwd(select))
+                        } else {
+                            format!("|{select}|")
+                        }
                     };
                     break;
                 }
             }
             if span.0 != select {
-                **span = select.clone();
+                **span = if style.password_style {change_passwd(select.clone())} else { select.clone() };
             }
             break;
         }

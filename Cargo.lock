@@ -459,10 +459,11 @@ dependencies = [
 
 [[package]]
 name = "bevy_bc_ime_text_field"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "arboard",
  "bevy",
+ "undo_2",
 ]
 
 [[package]]
@@ -4168,6 +4169,15 @@ name = "typeid"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
+
+[[package]]
+name = "undo_2"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e76d34df022a54c3e2799eab2f02af6c90eca56aad8bba8f8eb356ce283907dc"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "unicode-bidi"

@@ -1,6 +1,6 @@
 [package]
 name = "bevy_bc_ime_text_field"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2024"
 license = "MIT"
 description="A simple IME-compatible text field plugin for Bevy (Windows only). Supports both UI and 2D text input."
@@ -20,6 +20,7 @@ bevy = { version = "0.16.0", features = [
     "bevy_window"
 ] }
 arboard = "3.6.1"
+undo_2 = "0.2.1"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"
