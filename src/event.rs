@@ -3,10 +3,10 @@ use bevy::{
     input::mouse::MouseButtonInput,
     math::Vec2,
 };
-
+use bevy::prelude::EntityEvent;
 use crate::text_field::TextField;
 
-#[derive(Event)]
+#[derive(EntityEvent)]
 pub struct TextEdited {
     pub text_field: TextField,
     pub entity: Entity,
@@ -17,17 +17,17 @@ pub struct PickingTextField {
     pub entity: Entity,
     pub text_field: TextField,
     pub cursor_position: Vec2,
-    pub cusrsor_click: MouseButtonInput,
+    pub cursor_click: MouseButtonInput,
 }
 
 #[derive(Debug, Event)]
 
 pub struct ChangedSelect {
     pub entity: Entity,
-    pub text_fiedl: TextField,
+    pub text_field: TextField,
 }
 
-#[derive(Event)]
+#[derive(EntityEvent)]
 pub struct EnterEvent {
     pub text_field: TextField,
     pub entity: Entity,

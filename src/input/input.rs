@@ -1,9 +1,9 @@
+use bevy::prelude::{MessageReader, Text2d};
 use std::{cmp::min, time::Instant};
 
 use bevy::{
     ecs::{
         entity::Entity,
-        event::EventReader,
         hierarchy::Children,
         query::{Changed, With},
         system::{Commands, Query, Res, ResMut},
@@ -13,7 +13,7 @@ use bevy::{
         ButtonInput,
     },
     sprite::Sprite,
-    text::{Text2d, TextLayoutInfo, TextSpan},
+    text::{ TextLayoutInfo, TextSpan},
     window::Ime,
 };
 
@@ -34,14 +34,14 @@ use super::{
 pub(crate) fn update_input(
     mut commands: Commands,
     last_emoji: ResMut<LastEmoji>,
-    evr_ime: EventReader<Ime>,
-    evr_kbd: EventReader<KeyboardInput>,
+    evr_ime: MessageReader<Ime>,
+    evr_kbd: MessageReader<KeyboardInput>,
     res_kbd: Res<ButtonInput<KeyCode>>,
-    mut q_textfield: Query<(Entity, &mut TextField, &TextFieldInfo, &mut TextFieldInput)>,
+    mut q_text_field: Query<(Entity, &mut TextField, &TextFieldInfo, &mut TextFieldInput)>,
 ) {
     let key_list = get_keys(last_emoji, evr_ime, evr_kbd, res_kbd);
 
-    for (entity, mut text_field, field_info, mut input) in q_textfield.iter_mut() {
+    for (entity, mut text_field, field_info, mut input) in q_text_field.iter_mut() {
         if !field_info.focus {
             continue;
         }
@@ -61,18 +61,18 @@ pub(crate) fn update_input(
 
         //event
         if is_text_change {
-            commands.get_entity(entity).unwrap().trigger(TextEdited {
+            commands.get_entity(entity).unwrap().trigger(|entity| {TextEdited {
                 text_field: text_field.clone(),
                 entity: entity,
-            });
+            }});
             input.last_change_time = Instant::now()
         }
 
         if is_enter {
-            commands.get_entity(entity).unwrap().trigger(EnterEvent {
+            commands.get_entity(entity).unwrap().trigger(|entity| {EnterEvent {
                 text_field: text_field.clone(),
                 entity: entity,
-            });
+            }});
         }
     }
 }
@@ -134,8 +134,8 @@ pub(crate) fn reload_text_field(
 
 pub(crate) fn get_keys(
     mut last_emoji: ResMut<LastEmoji>,
-    mut evr_ime: EventReader<Ime>,
-    mut evr_kbd: EventReader<KeyboardInput>,
+    mut evr_ime: MessageReader<Ime>,
+    mut evr_kbd: MessageReader<KeyboardInput>,
     res_kbd: Res<ButtonInput<KeyCode>>,
 ) -> Vec<KeyInform> {
     let mut list: Vec<KeyInform> = Vec::new();
@@ -185,7 +185,7 @@ pub(crate) fn get_keys(
     for key in key_list {
         if key.state.is_pressed() {
             let mut add_key: Option<InformType> = None;
-            get_text_inform_type(key.logical_key.clone(), &mut add_key, is_pressed_ctrl);
+            get_text_inform_type(key.logical_key.clone(), &mut add_key, is_pressed_ctrl,is_pressed_shift);
             if is_pressed_shift {
                 get_select_shift_informtype(key.logical_key.clone(), &mut add_key, is_pressed_ctrl);
             } else {

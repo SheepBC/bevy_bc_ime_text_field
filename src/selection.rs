@@ -38,7 +38,7 @@ pub(crate) fn update_text_cursor_timer(
     for mut text_cursor in q_cursors.iter_mut() {
         text_cursor.change_timer.tick(time.delta());
 
-        if text_cursor.change_timer.finished() {
+        if text_cursor.change_timer.is_finished() {
             text_cursor.display = !text_cursor.display;
         }
     }

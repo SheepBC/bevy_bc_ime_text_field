@@ -1,3 +1,4 @@
+use bevy::prelude::{On, Text2d};
 use std::time::Instant;
 
 use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::split_text};
@@ -8,7 +9,6 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        observer::Trigger,
         query::Added,
         resource::Resource,
         system::{Commands, Query, Res, ResMut},
@@ -19,7 +19,7 @@ use bevy::{
         Pickable,
     },
     sprite::Sprite,
-    text::{Text2d, TextSpan},
+    text::{TextSpan},
     ui::widget::Text,
 };
 
@@ -29,16 +29,17 @@ const TRANSPARENT: Srgba = Srgba::new(0.0, 0.0, 0.0, 0.0);
 pub(crate) struct LastEmoji(pub Option<String>);
 
 #[derive(Debug,Clone)]
-enum Change{
-    Add(Select,String),
-    Delete(Select,String)
+pub struct Change{
+    pub select: Select,
+    pub before: String,
+    pub after: String,
 }
 
 #[derive(Debug, Component, Clone)]
 pub struct TextField {
     pub text: String,
     pub select: Select,
-    command: undo_2::Commands<Change>
+    pub command: undo_2::Commands<Change>
 }
 
 impl Default for TextField {
@@ -242,18 +243,18 @@ pub(crate) fn add_text_field_child(
 pub struct OverField(pub Option<Entity>);
 
 fn change_add_cursor_over_field(
-    trigger: Trigger<Pointer<Over>>,
+    trigger: On<Pointer<Over>>,
     mut over_field: ResMut<OverField>,
 ) {
-    over_field.0 = Some(trigger.target);
+    over_field.0 = Some(trigger.entity);
 }
 
 fn change_remove_cursor_over_field(
-    trigger: Trigger<Pointer<Out>>,
+    trigger: On<Pointer<Out>>,
     mut over_field: ResMut<OverField>,
 ) {
     if let Some(entity) = over_field.0 {
-        if entity == trigger.target {
+        if entity == trigger.entity {
             over_field.0 = None;
         }
     }
