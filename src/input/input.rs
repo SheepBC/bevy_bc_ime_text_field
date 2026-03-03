@@ -212,11 +212,11 @@ pub(crate) fn set_text_field(
 ) {
     let mut text_list = split_text(text_field.text.clone(), text_field.select.clone());
     for key_inform in key_list {
-
+        //println!("Key: {:?}",key_inform);
         if key_inform.is_finish {
             match &key_inform.key {
                 InformType::KeyType(key) => {
-                    set_text_list(key, &mut text_list, text_field);
+                    set_text_list(key, &mut text_list, text_field,input.is_last_text_ime);
                 }
                 InformType::SelectType(key) => {
                     if set_select_text_list(key, &mut text_list, text_field) {
@@ -224,6 +224,7 @@ pub(crate) fn set_text_field(
                     }
                 }
             }
+            text_field.last_select = String::new();
             input.is_last_text_ime = false;
         }
         else {
@@ -231,7 +232,9 @@ pub(crate) fn set_text_field(
                 if !input.is_last_text_ime {
                     num = 0;
                 }
-
+                if !text_field.select.is_close() && !input.is_last_text_ime{
+                    text_field.last_select = text_list[1].clone();
+                }
                 if let InformType::KeyType(KeyType::Text(text)) = &key_inform.key {
                     for _ in 0..num{
                         text_list[0].pop();

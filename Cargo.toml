@@ -11,7 +11,7 @@ categories = ["game-development", "gui", "text-editors"]
 keywords = ["bevy", "ui", "text", "input"]
 
 [dependencies]
-bevy = { version = "0.17.2", features = [
+bevy = { version = "0.18.0", features = [
     "bevy_color",
     "bevy_text",
     "bevy_picking",

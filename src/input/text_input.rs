@@ -2,7 +2,7 @@ use arboard::Clipboard;
 use bevy::input::keyboard::Key;
 use crate::input::control::get_front_ctrl;
 use crate::text_field::{Change, Select, TextField};
-use crate::tool::split_text;
+use crate::tool::{split_text, ToolString};
 use super::input::InformType;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -66,37 +66,45 @@ fn set_ctrl_key(add_key: &mut Option<InformType>, s_msg: String, is_shift: bool)
     }
 }
 
-pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mut TextField) {
+pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mut TextField,is_last_text_ime: bool) {
     let mut reset_select = true;
     match key {
         KeyType::Text(text) => {
             text_list[0] += &text;
-            text_field.command.push(Change{select: text_field.select,before:text_list[1].clone(),after:text.clone()});
+            let mut select = if is_last_text_ime{
+                let size = text.size();
+                Select(text_field.select.0-size,text_field.select.1-size,text_field.select.2)
+            }else { text_field.select };
+            let before = if is_last_text_ime{
+                let size = text_field.last_select.size();
+                select.1 += size;
+                //println!("{:?} {:?}",size,select);
+                text_field.last_select.clone()
+            }else { text_list[1].clone() };
+            text_field.push(Change{select: select,before:before,after:text.clone()});
         }
         KeyType::Space => {
             text_list[0] += &" ";
-            text_field.command.push(Change{select: text_field.select,before:text_list[1].clone(),after:" ".to_string()});
+            text_field.push(Change{select: text_field.select,before:text_list[1].clone(),after:" ".to_string()});
         }
         KeyType::BackSpace => {
-            let mut pop = String::new();
-            if text_field.select.is_close() {
-                pop = if let Some(c) = text_list[0].pop(){
-                    c.to_string()
-                }else { String::new() };
-            }
-            else{pop = text_list[1].clone();}
-            text_field.command.push(Change{select: text_field.select,before:pop,after:"".to_string()});
+            let pop = if text_field.select.is_close() {
+                text_list[0].pop().map(|c| c.to_string()).unwrap_or_default()
+            } else {
+                text_list[1].clone()
+            };
+            text_field.push(Change{select: text_field.select,before:pop,after:"".to_string()});
         }
         KeyType::CtrlBackSpace => {
             let list = get_front_ctrl(text_list[0].clone() + &text_list[1]);
             text_list[0] = list[0].clone();
-            text_field.command.push(Change{select: text_field.select,before:text_list[1].clone(),after:"".to_string()});
+            text_field.push(Change{select: text_field.select,before:text_list[1].clone(),after:"".to_string()});
         }
         KeyType::Paste => {
             if let Ok(mut clip) = Clipboard::new() {
                 if let Ok(text) = clip.get_text(){
                     text_list[0] += &text;
-                    text_field.command.push(Change{select: text_field.select,before:text_list[1].clone(),after:text.clone()});
+                    text_field.push(Change{select: text_field.select,before:text_list[1].clone(),after:text.clone()});
                 }
             }
         }
@@ -109,7 +117,7 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
         KeyType::Cut => {
             if let Ok(mut clip) = Clipboard::new() {
                 let _ =clip.set_text(text_list[1].clone());
-                text_field.command.push(Change{select: text_field.select,before:text_list[1].clone(),after:"".to_string()});
+                text_field.push(Change{select: text_field.select,before:text_list[1].clone(),after:"".to_string()});
             }
         }
         KeyType::AllSelect => {
@@ -120,14 +128,33 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
         }
         KeyType::Undo => {
             for(_,command) in text_field.command.undo(){
-                println!("Undo {:?}",command);
+
+                //println!("Undo {:?}",command);
                 let new_list = split_text(text_field.text.clone(),Select(command.select.0,command.select.0,command.select.2));
-                println!("Undo List: {:?}",new_list);
+                //println!("Undo List: {:?}",new_list);
+                let new = split_text(new_list[2].clone(),Select(command.after.size(),command.after.size(),None));
+                text_list[0] = new_list[0].clone();
+                if command.select.is_close(){
+                    text_list[0] += command.before.as_str();
+                    text_list[1] = String::new();
+                }
+                else {text_list[1] = command.before.clone();}
+                text_list[2] = new[2].clone();
+                //println!("Undo After: {:?}",text_list);
+                if command.before.size() != 0 { reset_select = false;}
             }
         }
         KeyType::Redo => {
             for(_,command) in text_field.command.redo(){
-                println!("Redo {:?}",command);
+                //println!("Redo {:?}",command);
+                let new_list = split_text(text_field.text.clone(),Select(command.select.0,command.select.0,command.select.2));
+                //println!("Redo List: {:?}",new_list);
+                text_list[0] = new_list[0].clone()+command.after.as_str();
+                text_list[1] = command.before.clone();
+                text_list[2] = new_list[2].clone();
+                let num = command.before.size();
+                let arr: Vec<String> = new_list[2].chars().map(|c| c.to_string()).collect();
+                text_list[2] = arr[num..arr.len()].join("");
             }
         }
     }

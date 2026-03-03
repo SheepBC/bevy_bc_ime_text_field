@@ -1,6 +1,6 @@
 use crate::input::input::reload_text_field;
 use crate::text_field::{TextField, TextFieldPosition};
-use bevy::color::palettes::tailwind::{BLUE_200, BLUE_800};
+use bevy::color::palettes::tailwind::BLUE_200;
 use bevy::prelude::{ParamSet, TextBackgroundColor};
 use bevy::text::TextSpan;
 use bevy::{
@@ -16,7 +16,6 @@ use bevy::{
     },
     text::{TextColor, TextFont},
 };
-use bevy::ui::BackgroundColor;
 
 #[derive(Component)]
 pub struct TextFieldStyle {

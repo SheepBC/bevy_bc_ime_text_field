@@ -39,7 +39,8 @@ pub struct Change{
 pub struct TextField {
     pub text: String,
     pub select: Select,
-    pub command: undo_2::Commands<Change>
+    pub command: undo_2::Commands<Change>,
+    pub(crate) last_select: String
 }
 
 impl Default for TextField {
@@ -47,7 +48,8 @@ impl Default for TextField {
         Self {
             text: String::new(),
             select: Select(0, 0, None),
-            command: undo_2::Commands::new()
+            command: undo_2::Commands::new(),
+            last_select: String::new()
         }
     }
 }
@@ -99,6 +101,13 @@ impl TextField {
             },
             Pickable::default(),
         )
+    }
+
+    pub fn push(&mut self,change: Change){
+        if self.command.is_undoing(){
+            self.command.clear();
+        }
+        self.command.push(change);
     }
 }
 /// start, end, startPoint
