@@ -1,27 +1,36 @@
-# Bevy_BC_ime_text_field
+# bevy_bc_ime_text_field
 
 A simple IME-compatible text field plugin for **Bevy** (Windows only).  
-Supports both UI and 2D text input.
+Supports both UI and 2D text input, with full Korean/Japanese/Chinese IME support.
+
+![demo](text_field.gif)
 
 ## ✨ Features
 
-- IME (Input Method Editor) text input support (Windows)
-- 2D & UI-compatible text fields
+- IME support (Windows 10 & 11)
+- Works with **2D** (`Text2d`) and **UI** (`Text`) text fields
+- **Undo / Redo** (`Ctrl+Z` / `Ctrl+Y`)
+- Text **selection** (mouse & keyboard)
+- **Copy / Paste / Cut** (`Ctrl+C` / `Ctrl+V` / `Ctrl+X`)
+- **Select All** (`Ctrl+A`)
+- **Password** style masking
+- Max length limit
+- Events: `TextEdited`, `EnterEvent`
 
 ## 📦 Installation
-
-Add this to your `Cargo.toml`:
-
 ```toml
 [dependencies]
-bevy_bc_ime_text_field = "VERSION"
+bevy_bc_ime_text_field = "0.1"
 ```
-| `bevy` Version | `bevy_bc_ime_text_field` Version |
-| -------------- |----------------------------------| 
-| `0.16`         | `0.0.1` ~                        |
 
+### Version Compatibility
 
-# 🚀 Example
+| `bevy` | `bevy_bc_ime_text_field` |
+|--------|--------------------------|
+| `0.16` | `0.0.1` ~ `0.0.5`        |
+| `0.18` | `0.1`                    |
+
+## 🚀 Quick Start
 ```rust
 use bevy::color::palettes::css::PINK;
 use bevy::prelude::*;
@@ -31,60 +40,74 @@ use bevy_bc_ime_text_field::text_field_style::*;
 
 fn main() {
     App::new()
-    .add_plugins(DefaultPlugins)
-    .add_plugins(ImeTextFieldPlugin)//✅required
-    .add_systems(Startup,setup)
-    .run();
+        .add_plugins(DefaultPlugins)
+        .add_plugins(ImeTextFieldPlugin) // ✅ Required
+        .add_systems(Startup, setup)
+        .run();
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>
-){
-    
+fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    //✅collects
-    commands.spawn(
-        TextField::new2d(true),
-    );
+    // 2D text field
+    commands.spawn(TextField::new2d(true));
 
-    commands.spawn(
-        TextField::new(true)
-    );
+    // UI text field
+    commands.spawn(TextField::new(true));
 
+    // With custom style
     commands.spawn((
         TextField::new2d(false),
         TextFieldStyle {
             color: PINK.into(),
             ..Default::default()
-        }
+        },
     ));
 
+    // Manual setup
     commands.spawn((
-        TextField::default(),//✅required
+        TextField::default(),     // ✅ Required
         TextFieldInfo::default(),
         TextFieldStyle::default(),
         TextFieldInput::default(),
-
-        //text
-        Text::default(),
-
-        //text2D
-        /*
-        Text2d::default(), //✅required
-        Sprite::default(),
-        Pickable::default(),
-         */
+        Text::default(),          // UI mode
+        // Text2d::default(),     // 2D mode
+        // Sprite::default(),
+        // Pickable::default(),
     ));
-
-    //❌incorrect
-    commands.spawn((
-        TextField::new(true),
-        TextFieldInfo::default(),
-    ));
-
 }
-
-
 ```
+
+## 🔔 Events
+
+Two events are triggered directly on the `TextField` entity:
+
+- `TextEdited` — fires whenever the text changes
+- `EnterEvent` — fires when Enter is pressed
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
+| `Ctrl+C` | Copy |
+| `Ctrl+V` | Paste |
+| `Ctrl+X` | Cut |
+| `Ctrl+A` | Select All |
+| `Ctrl+Backspace` | Delete word |
+| `Shift+Arrow` | Extend selection |
+
+## ⚠️ Notes
+
+- Windows only
+- Do **not** add `TextFieldInfo` manually when using `new()` / `new2d()`
+
+## 📄 License
+
+Licensed under either of:
+
+- MIT License ([LICENSE-MIT](LICENSE-MIT))
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+
+at your option.

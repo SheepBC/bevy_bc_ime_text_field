@@ -1,9 +1,9 @@
-use arboard::Clipboard;
-use bevy::input::keyboard::Key;
+use super::input::InformType;
 use crate::input::control::get_front_ctrl;
 use crate::text_field::{Change, Select, TextField};
 use crate::tool::{split_text, ToolString};
-use super::input::InformType;
+use arboard::Clipboard;
+use bevy::input::keyboard::Key;
 
 #[derive(PartialEq, Eq, Debug)]
 pub(crate) enum KeyType {
@@ -73,7 +73,11 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
             text_list[0] += &text;
             let mut select = if is_last_text_ime{
                 let size = text.size();
-                Select(text_field.select.0-size,text_field.select.1-size,text_field.select.2)
+                Select(
+                    text_field.select.0.saturating_sub(size),
+                    text_field.select.1.saturating_sub(size),
+                    text_field.select.2
+                )
             }else { text_field.select };
             let before = if is_last_text_ime{
                 let size = text_field.last_select.size();

@@ -1,8 +1,8 @@
 [package]
 name = "bevy_bc_ime_text_field"
-version = "0.0.5"
+version = "0.1.0"
 edition = "2024"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 description="A simple IME-compatible text field plugin for Bevy (Windows only). Supports both UI and 2D text input."
 repository = "https://github.com/SheepBC/bevy_bc_ime_text_field"
 readme = "README.md"
@@ -25,3 +25,6 @@ undo_2 = "0.2.1"
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-gnu"
 targets = ["x86_64-pc-windows-gnu"]
+
+[patch.crates-io]
+blake3 = { version = "1", features = ["pure"] }

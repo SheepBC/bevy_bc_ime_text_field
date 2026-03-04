@@ -527,7 +527,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_bc_ime_text_field"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "arboard",
  "bevy",
