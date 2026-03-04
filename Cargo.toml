@@ -26,5 +26,3 @@ undo_2 = "0.2.1"
 default-target = "x86_64-pc-windows-gnu"
 targets = ["x86_64-pc-windows-gnu"]
 
-[patch.crates-io]
-blake3 = { version = "1", features = ["pure"] }
