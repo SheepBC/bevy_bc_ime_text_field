@@ -1,5 +1,8 @@
 # bevy_bc_ime_text_field
 
+[![crates.io](https://img.shields.io/crates/v/bevy_bc_ime_text_field)](https://crates.io/crates/bevy_bc_ime_text_field)
+[![docs.rs](https://docs.rs/bevy_bc_ime_text_field/badge.svg)](https://docs.rs/bevy_bc_ime_text_field)
+
 A simple IME-compatible text field plugin for **Bevy** (Windows only).  
 Supports both UI and 2D text input, with full Korean/Japanese/Chinese IME support.
 
