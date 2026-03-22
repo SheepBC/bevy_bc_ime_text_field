@@ -1,7 +1,7 @@
 use crate::input::input::reload_text_field;
 use crate::text_field::{TextField, TextFieldPosition};
 use bevy::color::palettes::tailwind::BLUE_200;
-use bevy::prelude::{ParamSet, TextBackgroundColor};
+use bevy::prelude::{Commands, ContainsEntity, ParamSet, RemovedComponents, TextBackgroundColor, With};
 use bevy::text::TextSpan;
 use bevy::{
     color::{
@@ -88,6 +88,35 @@ pub(crate) fn text_style_changed(
     }
 }
 
+pub fn text_deco<T:Component + Clone>(
+    mut commands: Commands,
+    field_style: Query<(&Children,Option<&T>),(With<TextField>,Changed<T>)>
+){
+    for (children, comp) in  field_style.iter() {
+        for child in children.iter() {
+            if let Some(comp) = comp{
+                commands.entity(child.entity()).insert(comp.clone());
+            }
+
+        }
+    }
+}
+
+pub fn text_remove_deco<T:Component>(
+    mut commands: Commands,
+    mut remove: RemovedComponents<T>,
+    children: Query<&Children,With<TextField>>,
+    has_comp: Query<(), With<T>>
+){
+    for entity in remove.read() {
+        let Ok(children) = children.get(entity) else { continue };
+        for &child in children {
+            if has_comp.contains(child) {
+                commands.entity(child).remove::<T>();
+            }
+        }
+    }
+}
 pub fn change_passwd(text: String) -> String{
     text.chars().map(|_| '•').collect()
 }
