@@ -532,6 +532,7 @@ dependencies = [
  "arboard",
  "bevy",
  "undo_2",
+ "web-time",
 ]
 
 [[package]]

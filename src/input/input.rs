@@ -1,6 +1,6 @@
 use bevy::prelude::{MessageReader, Text2d};
-use std::{cmp::min, time::Instant};
-
+use std::{cmp::min};
+use web_time::Instant;
 use bevy::{
     ecs::{
         entity::Entity,

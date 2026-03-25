@@ -1,4 +1,4 @@
-#![cfg(windows)]
+//#![cfg(windows)]
 //! # bevy_bc_ime_text_field
 //!
 //! [![crates.io](https://img.shields.io/crates/v/bevy_bc_ime_text_field)](https://crates.io/crates/bevy_bc_ime_text_field)

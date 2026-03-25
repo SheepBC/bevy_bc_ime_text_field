@@ -19,8 +19,10 @@ bevy = { version = "0.18.0", features = [
     "bevy_ui",
     "bevy_window"
 ] }
-arboard = "3.6.1"
+web-time = "1.1.0"
 undo_2 = "0.2.1"
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+arboard = "3.6.1"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-gnu"

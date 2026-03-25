@@ -2,8 +2,9 @@ use super::input::InformType;
 use crate::input::control::get_front_ctrl;
 use crate::text_field::{Change, Select, TextField};
 use crate::tool::{split_text, ToolString};
-use arboard::Clipboard;
 use bevy::input::keyboard::Key;
+#[cfg(not(target_arch = "wasm32"))]
+use arboard::Clipboard;
 
 #[derive(PartialEq, Eq, Debug)]
 pub(crate) enum KeyType {
@@ -104,6 +105,7 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
             text_list[0] = list[0].clone();
             text_field.push(Change{select: text_field.select,before:text_list[1].clone(),after:"".to_string()});
         }
+        #[cfg(not(target_arch = "wasm32"))]
         KeyType::Paste => {
             if let Ok(mut clip) = Clipboard::new() {
                 if let Ok(text) = clip.get_text(){
@@ -112,12 +114,14 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
                 }
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
         KeyType::Copy => {
             if let Ok(mut clip) = Clipboard::new() {
                 let _ =clip.set_text(text_list[1].clone());
                 reset_select = false;
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
         KeyType::Cut => {
             if let Ok(mut clip) = Clipboard::new() {
                 let _ =clip.set_text(text_list[1].clone());
@@ -161,6 +165,8 @@ pub fn set_text_list(key: &KeyType, text_list: &mut [String; 3], text_field: &mu
                 text_list[2] = arr[num..arr.len()].join("");
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        _=> {}
     }
     if reset_select {
         text_list[1] = "".to_string();

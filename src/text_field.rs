@@ -1,5 +1,5 @@
 use bevy::prelude::{On, Text2d};
-use std::time::Instant;
+use web_time::Instant;
 
 use crate::{selection::TextFieldSelection, text_field_style::TextFieldStyle, tool::split_text};
 use bevy::prelude::{Changed, Children, With};
@@ -40,7 +40,7 @@ pub struct TextField {
     pub text: String,
     pub select: Select,
     pub command: undo_2::Commands<Change>,
-    pub(crate) last_select: String
+    pub last_select: String
 }
 
 impl Default for TextField {
